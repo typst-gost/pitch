@@ -6,6 +6,7 @@ import { useSlideContext } from "../presentation"
 export interface TypewriterStep {
   action: "type" | "delete" | "replace" | "pause" | "clear" | "wait"
   text?: string
+  closing?: string // Скрытый текст для автозакрытия скобок
   position?: number
   length?: number
   delay?: number
@@ -20,7 +21,6 @@ export interface TypewriterConfig {
   humanizeRange?: number
   loop?: boolean
   autoStart?: boolean
-  // Новые колбэки
   onStepComplete?: () => void
   onComplete?: () => void
 }
@@ -41,12 +41,12 @@ export function useTypewriter(config: TypewriterConfig) {
 
   const { registerStepHandler } = useSlideContext()
 
-  // Добавляем начальный wait, чтобы слайд ждал клика перед стартом анимации
   const steps = useMemo(() => {
     return [{ action: "wait" } as TypewriterStep, ...userSteps]
   }, [userSteps])
 
   const [text, setText] = useState(initialText)
+  const [currentClosing, setCurrentClosing] = useState("")
   const [isWaiting, setIsWaiting] = useState(autoStart)
   const [isTyping, setIsTyping] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
@@ -71,45 +71,45 @@ export function useTypewriter(config: TypewriterConfig) {
     setIsTyping(true)
   }, [])
 
-  // Регистрация обработчика клика/нажатия для слайда
   useEffect(() => {
     if (isWaiting) {
       registerStepHandler(() => {
         next()
         return true
       })
-      return () => {
-        registerStepHandler(null)
-      }
-    } else {
-      registerStepHandler(null)
+      return () => registerStepHandler(null)
     }
+    registerStepHandler(null)
   }, [isWaiting, next, registerStepHandler])
 
-  // Основная логика анимации
   useEffect(() => {
     if (!isTyping || isWaiting) return
 
-    // Проверка завершения всех шагов
     if (stepIndex >= steps.length) {
       if (loop && steps.length > 0) {
         setStepIndex(0)
         setCharIndex(0)
+        setCurrentClosing("")
         if (initialText) setText(initialText)
-        // Если зацикливаем, можно вызвать onComplete для цикла, если нужно
       } else {
         setIsTyping(false)
-        onComplete?.() // Вызываем колбэк завершения всей цепочки
+        setCurrentClosing("")
+        onComplete?.()
       }
       return
     }
 
     const step = steps[stepIndex]
 
+    // Устанавливаем закрывающий хвост в начале шага
+    if (charIndex === 0 && step.closing !== undefined) {
+      setCurrentClosing(step.closing)
+    }
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
 
     const completeCurrentStep = () => {
-      onStepComplete?.() // Вызываем колбэк завершения шага
+      onStepComplete?.()
       setCharIndex(0)
       setStepIndex((prev) => prev + 1)
     }
@@ -133,8 +133,8 @@ export function useTypewriter(config: TypewriterConfig) {
           break
 
         case "delete":
-          const deleteCount = step.length ?? 1
-          if (charIndex < deleteCount) {
+          const dCount = step.length ?? 1
+          if (charIndex < dCount) {
             timeoutRef.current = setTimeout(() => {
               setText((prev) => prev.slice(0, -1))
               setCharIndex((prev) => prev + 1)
@@ -145,8 +145,6 @@ export function useTypewriter(config: TypewriterConfig) {
           break
 
         case "replace":
-          // Replace обычно происходит мгновенно для пользователя (или с задержкой), 
-          // можно было бы разбить на удаление и печать, но тут простая реализация
           timeoutRef.current = setTimeout(() => {
             const pos = step.position ?? 0
             const len = step.length ?? 0
@@ -156,9 +154,7 @@ export function useTypewriter(config: TypewriterConfig) {
           break
 
         case "pause":
-          timeoutRef.current = setTimeout(() => {
-            completeCurrentStep()
-          }, step.delay ?? 1000)
+          timeoutRef.current = setTimeout(completeCurrentStep, step.delay ?? 1000)
           break
 
         case "clear":
@@ -175,20 +171,7 @@ export function useTypewriter(config: TypewriterConfig) {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [
-    stepIndex, 
-    charIndex, 
-    isTyping, 
-    isWaiting, 
-    steps, 
-    loop, 
-    initialText, 
-    getDelay, 
-    typeSpeed, 
-    deleteSpeed,
-    onStepComplete,
-    onComplete
-  ])
+  }, [stepIndex, charIndex, isTyping, isWaiting, steps, loop, initialText, getDelay, typeSpeed, deleteSpeed, onStepComplete, onComplete])
 
   const start = useCallback(() => {
     setIsWaiting(true)
@@ -196,40 +179,18 @@ export function useTypewriter(config: TypewriterConfig) {
     setStepIndex(0)
     setCharIndex(0)
     setText(initialText)
+    setCurrentClosing("")
   }, [initialText])
 
-  const stop = useCallback(() => {
+  const reset = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setIsTyping(false)
     setIsWaiting(false)
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-  }, [])
-
-  const reset = useCallback(() => {
-    stop()
     setText(initialText)
     setStepIndex(0)
     setCharIndex(0)
-  }, [stop, initialText])
+    setCurrentClosing("")
+  }, [initialText])
 
-  // Автостарт при инициализации (если нужно сбросить на 0 шаг)
-  useEffect(() => {
-    if (autoStart) {
-      setStepIndex(0)
-    }
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  return {
-    text,
-    isTyping,
-    isWaiting,
-    stepIndex,
-    start,
-    stop,
-    reset,
-    next,
-    setText,
-  }
+  return { text, currentClosing, isTyping, isWaiting, stepIndex, start, reset, next, setText }
 }

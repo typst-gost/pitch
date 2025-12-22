@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { motion } from "framer-motion"
 import { useTypewriter, type TypewriterStep } from "../hooks/use-typewriter"
 import { TypstEditor } from "@/components/typst/editor"
@@ -29,7 +29,7 @@ export function WorkshopSlide({
   deleteSpeed = 25,
   autoStart = true,
   readOnly = false,
-  hiddenPrefix = "#set page(width: 200pt, height: auto, margin: 20pt, fill: white)\n",
+  hiddenPrefix = '#import "@preview/modern-g7-32:0.2.0": *\n#show: gost.with(hide-title: true)\n#set page(width: 200pt, height: auto, margin: 20pt, fill: white, footer: none)\n',
   hiddenSuffix,
 }: WorkshopSlideProps) {
   const [userCode, setUserCode] = useState(initialCode)
@@ -37,13 +37,14 @@ export function WorkshopSlide({
 
   const {
     text: animatedCode,
+    currentClosing,
     isTyping,
     start,
   } = useTypewriter({
     initialText: initialCode,
     steps,
-    typeSpeed: typeSpeed,
-    deleteSpeed: deleteSpeed,
+    typeSpeed,
+    deleteSpeed,
     autoStart: false,
     onStepComplete: () => {
       if (!isUserEditing) {
@@ -52,6 +53,7 @@ export function WorkshopSlide({
     }
   })
 
+  // Автостарт
   useEffect(() => {
     if (autoStart && steps.length > 0 && !isUserEditing) {
       const timer = setTimeout(start, 800)
@@ -59,6 +61,7 @@ export function WorkshopSlide({
     }
   }, [autoStart, steps.length, start, isUserEditing])
 
+  // Синхронизация кода анимации с локальным состоянием
   useEffect(() => {
     if (!isUserEditing) {
       setUserCode(animatedCode)
@@ -71,9 +74,14 @@ export function WorkshopSlide({
     setUserCode(newCode)
   }
 
+  // Код для компиляции: основной текст + скрытые скобки (если мы не в режиме ручной правки)
+  const codeForPreview = useMemo(() => {
+    if (isUserEditing) return userCode
+    return userCode + (currentClosing || "")
+  }, [userCode, currentClosing, isUserEditing])
+
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-8 lg:p-16">
-      {/* Заголовок */}
       {(title || subtitle) && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
@@ -89,16 +97,14 @@ export function WorkshopSlide({
         </motion.div>
       )}
 
-      {/* Рабочая область - по центру */}
       <div className="w-full max-w-6xl flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 h-full max-h-[80vh]">
-        
-        {/* Левая панель: Редактор */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className="w-full lg:w-1/2 h-80 lg:h-full max-h-125 shrink-0"
         >
+          {/* Редактор показывает чистый код */}
           <TypstEditor 
             code={userCode}
             onChange={handleCodeChange}
@@ -107,22 +113,21 @@ export function WorkshopSlide({
           />
         </motion.div>
 
-        {/* Правая панель: Превью */}
         <motion.div
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
           className="w-full lg:w-1/2 h-80 lg:h-full max-h-125 shrink-0"
         >
+          {/* Превью рендерит код со скрытыми закрывающими скобками */}
           <TypstPreview 
-            code={userCode}
+            code={codeForPreview}
             hiddenPrefix={hiddenPrefix}
             hiddenSuffix={hiddenSuffix}
           />
         </motion.div>
       </div>
 
-      {/* Декор */}
       <div className="absolute bottom-0 left-0 right-0 h-24 bg-linear-to-t from-background to-transparent pointer-events-none" />
     </div>
   )

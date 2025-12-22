@@ -258,27 +258,27 @@ export default function PresentationPage() {
       ),
       type: "default",
       subslides: [
-        // Workshop: Title page
+        // Workshop 1: Title page with proper closing
         <WorkshopSlide
           key="workshop-title"
           title="Титульный лист"
           subtitle="Возможность 1"
           initialCode=""
           steps={[
-            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": gost\n\n' },
+            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": gost\n\n', closing: "" },
             { action: "pause", delay: 400 },
-            { action: "type", text: "#show: gost.with(\n" },
-            { action: "type", text: "  title-template: title-templates.mai,\n" },
+            { action: "type", text: "#show: gost.with(\n", closing: ")" },
+            { action: "type", text: "  title-template: title-templates.mai,\n", closing: ")" },
             { action: "pause", delay: 300 },
-            { action: "type", text: "  performers: (\n" },
-            { action: "type", text: '    (name: "Елисеев П.А."),\n' },
-            { action: "type", text: "  ),\n" },
+            { action: "type", text: "  performers: (\n", closing: "))" },
+            { action: "type", text: '    (name: "Елисеев П.А."),\n', closing: "))" },
+            { action: "type", text: "  ),\n", closing: ")" },
             { action: "type", text: ")" },
           ]}
           typeSpeed={30}
         />,
 
-        // Workshop: Auto numbering
+        // Workshop 2: Auto numbering
         <WorkshopSlide
           key="workshop-numbering"
           title="Автоматическая нумерация"
@@ -295,38 +295,38 @@ export default function PresentationPage() {
           typeSpeed={40}
         />,
 
-        // Workshop: Tables
+        // Workshop 3: Tables
         <WorkshopSlide
           key="workshop-tables"
           title="Таблицы по ГОСТ"
           subtitle="Возможность 3"
           initialCode=""
           steps={[
-            { action: "type", text: "#figure(\n" },
-            { action: "type", text: "  table(\n" },
-            { action: "type", text: "    columns: 3,\n" },
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: "  table(\n", closing: "))" },
+            { action: "type", text: "    columns: 3,\n", closing: "))" },
             { action: "pause", delay: 300 },
-            { action: "type", text: "    [Параметр], [Значение], [Ед. изм.],\n" },
-            { action: "type", text: "    [Мощность], [100], [Вт],\n" },
-            { action: "type", text: "    [Масса], [2.5], [кг],\n" },
-            { action: "type", text: "  ),\n" },
-            { action: "type", text: "  caption: [Характеристики устройства]\n" },
+            { action: "type", text: "    [Параметр], [Значение], [Ед. изм.],\n", closing: "))" },
+            { action: "type", text: "    [Мощность], [100], [Вт],\n", closing: "))" },
+            { action: "type", text: "    [Масса], [2.5], [кг],\n", closing: "))" },
+            { action: "type", text: "  ),\n", closing: ")" },
+            { action: "type", text: "  caption: [Характеристики устройства]\n", closing: ")" },
             { action: "type", text: ") <tab:specs>" },
           ]}
           typeSpeed={35}
         />,
 
-        // Workshop: Figures
+        // Workshop 4: Figures
         <WorkshopSlide
           key="workshop-figures"
           title="Рисунки и подписи"
           subtitle="Возможность 4"
           initialCode=""
           steps={[
-            { action: "type", text: "#figure(\n" },
-            { action: "type", text: '  image("schema.png", width: 80%),\n' },
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: '  image("schema.png", width: 80%),\n', closing: ")" },
             { action: "pause", delay: 400 },
-            { action: "type", text: "  caption: [Структурная схема системы]\n" },
+            { action: "type", text: "  caption: [Структурная схема системы]\n", closing: ")" },
             { action: "type", text: ") <fig:schema>\n\n" },
             { action: "pause", delay: 500 },
             { action: "type", text: "На @fig:schema показана схема." },
@@ -334,35 +334,35 @@ export default function PresentationPage() {
           typeSpeed={38}
         />,
 
-        // Workshop: Abstract
+        // Workshop 5: Abstract
         <WorkshopSlide
           key="workshop-abstract"
           title="Автоматический реферат"
           subtitle="Возможность 5"
           initialCode=""
           steps={[
-            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": abstract\n\n' },
+            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": abstract\n\n', closing: "" },
             { action: "pause", delay: 400 },
-            { action: "type", text: "#abstract(\n" },
-            { action: "type", text: '  "АВТОМАТИЗАЦИЯ", "ГОСТ", "TYPST"\n' },
-            { action: "type", text: ")[\n" },
-            { action: "type", text: "  Настоящий документ описывает\n" },
-            { action: "type", text: "  шаблон modern-g7-32...\n" },
+            { action: "type", text: "#abstract(\n", closing: ")" },
+            { action: "type", text: '  "АВТОМАТИЗАЦИЯ", "ГОСТ", "TYPST"\n', closing: ")" },
+            { action: "type", text: ")[\n", closing: "]" },
+            { action: "type", text: "  Настоящий документ описывает\n", closing: "]" },
+            { action: "type", text: "  шаблон modern-g7-32...\n", closing: "]" },
             { action: "type", text: "]" },
           ]}
           typeSpeed={32}
         />,
 
-        // Workshop: Bibliography
+        // Workshop 6: Bibliography
         <WorkshopSlide
           key="workshop-bib"
           title="Библиография"
           subtitle="Возможность 6"
           initialCode=""
           steps={[
-            { action: "type", text: "#bibliography(\n" },
-            { action: "type", text: '  "refs.bib",\n' },
-            { action: "type", text: '  style: "gost-r-7-0-5-2008-numeric"\n' },
+            { action: "type", text: "#bibliography(\n", closing: ")" },
+            { action: "type", text: '  "refs.bib",\n', closing: ")" },
+            { action: "type", text: '  style: "gost-r-7-0-5-2008-numeric"\n', closing: ")" },
             { action: "type", text: ")\n\n" },
             { action: "pause", delay: 500 },
             { action: "type", text: "// В тексте:\n" },
@@ -371,21 +371,42 @@ export default function PresentationPage() {
           typeSpeed={35}
         />,
 
-        // Workshop: Code listings
+        // Workshop 7: Code listings
         <WorkshopSlide
           key="workshop-code"
           title="Листинги кода"
           subtitle="Возможность 7"
           initialCode=""
           steps={[
-            { action: "type", text: "#figure(\n" },
+            { action: "type", text: "#figure(\n", closing: ")" },
             { action: "type", text: "  ```python\n" },
-            { action: "type", text: "  def hello():\n" },
-            { action: "type", text: '      print("Hello!")\n' },
-            { action: "type", text: "  ```\n" },
-            { action: "type", text: ") <lst:hello>\n\n" },
+            { action: "type", text: "  def hello():\n", closing: "```"},
+            { action: "type", text: '      print("Hello!")\n', closing: "```\n)" },
+            { action: "type", text: "  ```\n"},
+            { action: "type", text: ") <listing>\n\n" },
+            { action: "pause", delay: 200 },
+            { action: "type", text: "#lorem(50)\n\n" },
+            { action: "type", text: "В @listing показан пример." },
+          ]}
+          typeSpeed={40}
+        />,
+
+        // Workshop 8: Speed demonstration
+        <WorkshopSlide
+          key="workshop-speed"
+          title="Скорость компиляции"
+          subtitle="Возможность 8"
+          initialCode=""
+          steps={[
+            { action: "type", text: "#set page(\n", closing: ")" },
+            { action: "type", text: "  width: 210mm,\n", closing: ")" },
+            { action: "type", text: "  height: 297mm,\n", closing: ")" },
+            { action: "pause", delay: 300 },
+            { action: "type", text: "  margin: 20mm\n", closing: ")" },
+            { action: "type", text: ")\n\n" },
             { action: "pause", delay: 400 },
-            { action: "type", text: "В @lst:hello показан пример." },
+            { action: "type", text: "= Большой документ\n\n" },
+            { action: "type", text: "Компилируется за миллисекунды!" },
           ]}
           typeSpeed={40}
         />,
@@ -451,8 +472,16 @@ export default function PresentationPage() {
           title: "Документация",
           description: "Разработка подробной документации по использованию шаблона",
         },
-        { icon: Brain, title: "Интеграция с ИИ", description: "Интеграция с технологиями искусственного интеллекта" },
-        { icon: ArrowUpCircle, title: "Доработка", description: "Постоянное улучшение и доработка шаблона" },
+        {
+          icon: Brain,
+          title: "Интеграция с ИИ",
+          description: "Интеграция с технологиями искусственного интеллекта",
+        },
+        {
+          icon: ArrowUpCircle,
+          title: "Доработка",
+          description: "Постоянное улучшение и доработка шаблона",
+        },
       ]}
     />,
 
