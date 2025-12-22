@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "typst-pitch",
+      "name": "my-v0-project",
       "dependencies": {
         "@emotion/is-prop-valid": "latest",
         "@hookform/resolvers": "^3.10.0",
