@@ -101,11 +101,11 @@ export default function PresentationPage() {
           content={
             <ul className="space-y-4">
               <li className="flex items-start gap-3">
-                <FileWarning className="w-5 h-5 text-destructive mt-1 flex-shrink-0" />
+                <FileWarning className="w-5 h-5 text-destructive mt-1 shrink-0" />
                 <span>Громоздкий синтаксис с множеством команд</span>
               </li>
               <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-destructive mt-1 flex-shrink-0" />
+                <Clock className="w-5 h-5 text-destructive mt-1 shrink-0" />
                 <span>Медленная компиляция больших документов</span>
               </li>
               <li className="flex items-start gap-3">
@@ -197,7 +197,6 @@ export default function PresentationPage() {
           ]}
           typeSpeed={35}
           humanize={true}
-          previewPlaceholder="Здесь будет предпросмотр документа"
         />
       ),
       type: "workshop",

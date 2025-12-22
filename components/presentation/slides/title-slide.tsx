@@ -1,6 +1,7 @@
 "use client"
 
 import { motion } from "framer-motion"
+import { X } from "lucide-react"
 import Image from "next/image"
 
 interface TitleSlideProps {
@@ -35,14 +36,30 @@ export function TitleSlide({
 
       {/* Logos */}
       <motion.div
-        className="absolute top-8 left-8 flex items-center gap-6"
+        className="absolute top-8 left-8 flex items-center gap-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
         {showLogo && <Image src="/logo.svg" alt="Typst GOST" width={48} height={58} className="h-12 w-auto" />}
+        
+        <motion.div
+          className="w-6 h-6 flex items-center justify-center text-gray-400"
+          animate={{
+            rotate: [0, 90, 180, 270, 360],
+          }}
+          transition={{
+            duration: 2.5,
+            repeat: Infinity,
+            ease: ["easeOut", "easeIn", "easeOut", "easeIn", "easeOut"],
+            times: [0, 0.2, 0.5, 0.8, 1],
+          }}
+        >
+          <X className="text-white/70" />
+        </motion.div>
+        
         {showMaiLogo && (
-          <Image src="/mai-logo.svg" alt="МАИ" width={40} height={40} className="h-10 w-auto opacity-80" />
+          <Image src="/mai-logo.svg" alt="МАИ" width={60} height={60} className="h-12 w-auto opacity-80" />
         )}
       </motion.div>
 

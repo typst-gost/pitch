@@ -9,6 +9,11 @@
     "start": "next start"
   },
   "dependencies": {
+    "@myriaddreamin/typst-ts-node-compiler": "^0.7.0-rc1",
+    "@myriaddreamin/typst.ts": "^0.7.0-rc1",
+    "codemirror": "^6.0.2",
+    "codemirror-shiki": "^0.3.0",
+    "codemirror-wrapped-line-indent": "^1.0.9",
     "@emotion/is-prop-valid": "latest",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
@@ -56,6 +61,7 @@
     "react-hook-form": "^7.60.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
+    "shiki": "^3.20.0",
     "sonner": "^1.7.4",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",

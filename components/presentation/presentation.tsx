@@ -1,21 +1,24 @@
 "use client"
 
-import { useState, useCallback, useEffect, type ReactNode, createContext, useContext } from "react"
+import { useState, useCallback, useEffect, useRef, type ReactNode, createContext, useContext } from "react"
 import { AnimatedBackground } from "./animated-background"
 import { SlideWrapper } from "./slide-wrapper"
 import { SlideNavigation } from "./slide-navigation"
 import { SlideOverview } from "./slide-overview"
+import { useHideCursor } from "./hooks/use-hide-cursor"
 
 interface SlideContextValue {
   isWorkshop: boolean
   setIsWorkshop: (value: boolean) => void
   transitionType: "default" | "zoom-in" | "zoom-out" | "workshop-enter" | "workshop-exit"
+  registerStepHandler: (handler: (() => boolean) | null) => void
 }
 
 export const SlideContext = createContext<SlideContextValue>({
   isWorkshop: false,
   setIsWorkshop: () => {},
   transitionType: "default",
+  registerStepHandler: () => {},
 })
 
 export const useSlideContext = () => useContext(SlideContext)
@@ -30,7 +33,6 @@ interface PresentationProps {
   slides: (ReactNode | SlideConfig)[]
 }
 
-// Helper to normalize slides and track types
 interface FlatSlide {
   component: ReactNode
   type: "default" | "workshop" | "gallery"
@@ -77,48 +79,32 @@ export function Presentation({ slides }: PresentationProps) {
   >("default")
   const [showOverview, setShowOverview] = useState(false)
   const [showControls, setShowControls] = useState(false)
-  const [controlsTimeout, setControlsTimeout] = useState<NodeJS.Timeout | null>(null)
   const [isWorkshop, setIsWorkshop] = useState(false)
+  const isCursorHidden = useHideCursor(2000)
+
+  const stepHandlerRef = useRef<(() => boolean) | null>(null)
 
   const flatSlides = normalizeSlides(slides)
+
+  const registerStepHandler = useCallback((handler: (() => boolean) | null) => {
+    stepHandlerRef.current = handler
+  }, [])
 
   const getTransitionType = useCallback(
     (fromIndex: number, toIndex: number) => {
       const fromSlide = flatSlides[fromIndex]
       const toSlide = flatSlides[toIndex]
 
-      // Entering subslide from parent (zoom-in effect)
-      if (!fromSlide?.isSubslide && toSlide?.isSubslide) {
-        return "zoom-in"
-      }
-      // Exiting subslide to parent (zoom-out effect)
-      if (fromSlide?.isSubslide && !toSlide?.isSubslide) {
-        return "zoom-out"
-      }
-      // Between subslides (smoother transition)
-      if (fromSlide?.isSubslide && toSlide?.isSubslide) {
-        return "default"
-      }
-      // Entering workshop
-      if (toSlide?.type === "workshop" && fromSlide?.type !== "workshop") {
-        return "workshop-enter"
-      }
-      // Exiting workshop
-      if (fromSlide?.type === "workshop" && toSlide?.type !== "workshop") {
-        return "workshop-exit"
-      }
+      if (!fromSlide?.isSubslide && toSlide?.isSubslide) return "zoom-in"
+      if (fromSlide?.isSubslide && !toSlide?.isSubslide) return "zoom-out"
+      if (fromSlide?.isSubslide && toSlide?.isSubslide) return "default"
+      if (toSlide?.type === "workshop" && fromSlide?.type !== "workshop") return "workshop-enter"
+      if (fromSlide?.type === "workshop" && toSlide?.type !== "workshop") return "workshop-exit"
 
       return "default"
     },
     [flatSlides],
   )
-
-  const showControlsTemporarily = useCallback(() => {
-    setShowControls(true)
-    if (controlsTimeout) clearTimeout(controlsTimeout)
-    const timeout = setTimeout(() => setShowControls(false), 3000)
-    setControlsTimeout(timeout)
-  }, [controlsTimeout])
 
   const goToSlide = useCallback(
     (index: number) => {
@@ -128,21 +114,25 @@ export function Presentation({ slides }: PresentationProps) {
       setDirection(index > currentSlide ? "right" : "left")
       setCurrentSlide(index)
       setIsWorkshop(flatSlides[index].type === "workshop")
-      showControlsTemporarily()
+      stepHandlerRef.current = null
     },
-    [currentSlide, flatSlides, getTransitionType, showControlsTemporarily],
+    [currentSlide, flatSlides, getTransitionType],
   )
 
   const nextSlide = useCallback(() => {
+    if (stepHandlerRef.current) {
+      const handled = stepHandlerRef.current()
+      if (handled) return
+    }
+
     if (currentSlide < flatSlides.length - 1) {
       const transition = getTransitionType(currentSlide, currentSlide + 1)
       setTransitionType(transition)
       setDirection("right")
       setCurrentSlide((prev) => prev + 1)
       setIsWorkshop(flatSlides[currentSlide + 1].type === "workshop")
-      showControlsTemporarily()
     }
-  }, [currentSlide, flatSlides, getTransitionType, showControlsTemporarily])
+  }, [currentSlide, flatSlides, getTransitionType])
 
   const prevSlide = useCallback(() => {
     if (currentSlide > 0) {
@@ -151,14 +141,11 @@ export function Presentation({ slides }: PresentationProps) {
       setDirection("left")
       setCurrentSlide((prev) => prev - 1)
       setIsWorkshop(flatSlides[currentSlide - 1].type === "workshop")
-      showControlsTemporarily()
     }
-  }, [currentSlide, flatSlides, getTransitionType, showControlsTemporarily])
+  }, [currentSlide, flatSlides, getTransitionType])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      showControlsTemporarily()
-
       if (showOverview) {
         if (e.key === "Escape") setShowOverview(false)
         return
@@ -196,9 +183,8 @@ export function Presentation({ slides }: PresentationProps) {
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [nextSlide, prevSlide, goToSlide, showOverview, flatSlides.length, showControlsTemporarily])
+  }, [nextSlide, prevSlide, goToSlide, showOverview, flatSlides.length])
 
-  // Touch support
   useEffect(() => {
     let touchStartX = 0
     let touchStartY = 0
@@ -206,7 +192,6 @@ export function Presentation({ slides }: PresentationProps) {
     const handleTouchStart = (e: TouchEvent) => {
       touchStartX = e.touches[0].clientX
       touchStartY = e.touches[0].clientY
-      showControlsTemporarily()
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -227,18 +212,10 @@ export function Presentation({ slides }: PresentationProps) {
       window.removeEventListener("touchstart", handleTouchStart)
       window.removeEventListener("touchend", handleTouchEnd)
     }
-  }, [nextSlide, prevSlide, showControlsTemporarily])
-
-  // Mouse movement shows controls
-  useEffect(() => {
-    const handleMouseMove = () => showControlsTemporarily()
-    window.addEventListener("mousemove", handleMouseMove)
-    return () => window.removeEventListener("mousemove", handleMouseMove)
-  }, [showControlsTemporarily])
+  }, [nextSlide, prevSlide])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      // Ignore clicks on buttons, links, and interactive elements
       const target = e.target as HTMLElement
       if (
         target.tagName === "BUTTON" ||
@@ -246,9 +223,7 @@ export function Presentation({ slides }: PresentationProps) {
         target.closest("button") ||
         target.closest("a") ||
         target.closest("[data-no-advance]")
-      ) {
-        return
-      }
+      ) return
       nextSlide()
     }
     window.addEventListener("click", handleClick)
@@ -256,7 +231,22 @@ export function Presentation({ slides }: PresentationProps) {
   }, [nextSlide])
 
   return (
-    <SlideContext.Provider value={{ isWorkshop, setIsWorkshop, transitionType }}>
+    <SlideContext.Provider
+      value={{
+        isWorkshop,
+        setIsWorkshop,
+        transitionType,
+        registerStepHandler
+      }}
+    >
+      {isCursorHidden && (
+        <style>{`
+          body, body * {
+            cursor: none !important;
+          }
+        `}</style>
+      )}
+
       <div className="fixed inset-0 bg-background overflow-hidden">
         <AnimatedBackground isWorkshop={isWorkshop} />
 
@@ -266,16 +256,26 @@ export function Presentation({ slides }: PresentationProps) {
           </SlideWrapper>
         </div>
 
-        <SlideNavigation
-          currentSlide={currentSlide}
-          totalSlides={flatSlides.length}
-          onPrev={prevSlide}
-          onNext={nextSlide}
-          onGoTo={goToSlide}
-          showOverview={showOverview}
-          onToggleOverview={() => setShowOverview((prev) => !prev)}
-          visible={showControls}
-        />
+        <div
+          className="fixed bottom-0 left-0 right-0 h-32 flex items-end justify-center pb-6 z-50"
+          onMouseEnter={() => setShowControls(true)}
+          onMouseLeave={() => setShowControls(false)}
+        >
+          <div className="pointer-events-none flex items-end justify-center w-full">
+            <div className="pointer-events-auto">
+              <SlideNavigation
+                currentSlide={currentSlide}
+                totalSlides={flatSlides.length}
+                onPrev={prevSlide}
+                onNext={nextSlide}
+                onGoTo={goToSlide}
+                showOverview={showOverview}
+                onToggleOverview={() => setShowOverview((prev) => !prev)}
+                visible={showControls}
+              />
+            </div>
+          </div>
+        </div>
 
         <SlideOverview
           slides={flatSlides.map((s) => s.component)}

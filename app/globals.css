@@ -219,3 +219,8 @@
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.hide-cursor-global, 
+.hide-cursor-global * {
+  cursor: none !important;
+}
