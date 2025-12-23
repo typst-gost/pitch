@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useCallback, useEffect, useRef, type ReactNode, createContext, useContext } from "react"
+import { motion, AnimatePresence } from "framer-motion"
 import { AnimatedBackground } from "./animated-background"
 import { SlideWrapper } from "./slide-wrapper"
 import { SlideNavigation } from "./slide-navigation"
 import { SlideOverview } from "./slide-overview"
 import { useHideCursor } from "./hooks/use-hide-cursor"
+import { SlideCounter } from "./slide-counter"
 
 interface SlideContextValue {
   isWorkshop: boolean
@@ -27,6 +29,8 @@ export interface SlideConfig {
   component: ReactNode
   subslides?: ReactNode[]
   type?: "default" | "workshop" | "gallery"
+  subslidesType?: "default" | "workshop" | "gallery"
+  numberingPosition?: "left" | "center" | "right"
 }
 
 interface PresentationProps {
@@ -38,6 +42,7 @@ interface FlatSlide {
   type: "default" | "workshop" | "gallery"
   isSubslide: boolean
   parentIndex?: number
+  numberingPosition: "left" | "center" | "right"
 }
 
 function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
@@ -45,18 +50,26 @@ function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
   slides.forEach((slide, parentIndex) => {
     if (slide && typeof slide === "object" && "component" in slide) {
       const config = slide as SlideConfig
+      const numberingPosition = config.numberingPosition || "right"
+      
+      const parentType = config.type || "default"
+      const childrenType = config.subslidesType || parentType 
+
       result.push({
         component: config.component,
-        type: config.type || "default",
+        type: parentType, 
         isSubslide: false,
+        numberingPosition,
       })
+      
       if (config.subslides) {
         config.subslides.forEach((sub) => {
           result.push({
             component: sub,
-            type: config.type || "default",
+            type: childrenType,
             isSubslide: true,
             parentIndex,
+            numberingPosition,
           })
         })
       }
@@ -65,11 +78,13 @@ function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
         component: slide as ReactNode,
         type: "default",
         isSubslide: false,
+        numberingPosition: "right",
       })
     }
   })
   return result
 }
+
 
 export function Presentation({ slides }: PresentationProps) {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -249,6 +264,18 @@ export function Presentation({ slides }: PresentationProps) {
 
       <div className="fixed inset-0 bg-background overflow-hidden">
         <AnimatedBackground isWorkshop={isWorkshop} />
+
+        {/* Нумерация слайдов */}
+        <AnimatePresence>
+          {currentSlide > 0 && (
+            <SlideCounter 
+              key="slide-counter"
+              current={currentSlide + 1} 
+              total={flatSlides.length}
+              position={flatSlides[currentSlide].numberingPosition}
+            />
+          )}
+        </AnimatePresence>
 
         <div className="relative w-full h-full flex items-center justify-center">
           <SlideWrapper slideKey={currentSlide} direction={direction} transitionType={transitionType}>

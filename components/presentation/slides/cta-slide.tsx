@@ -93,7 +93,7 @@ export function CTASlide({ title, subtitle, ctaText, showLogo = true, author, qr
                       className="rounded-lg"
                     />
                   ) : (
-                    <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
+                    <div className="w-20 h-20 bg-linear-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
                       <div className="grid grid-cols-5 gap-0.5">
                         {Array.from({ length: 25 }).map((_, i) => (
                           <div
@@ -118,7 +118,7 @@ export function CTASlide({ title, subtitle, ctaText, showLogo = true, author, qr
             transition={{ delay: 0.7 }}
             className="flex items-center gap-4 mb-8"
           >
-            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
+            <div className="w-14 h-14 rounded-full bg-linear-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
               {author.avatar ? (
                 <Image
                   src={author.avatar || "/placeholder.svg"}

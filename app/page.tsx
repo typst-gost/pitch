@@ -40,10 +40,9 @@ export default function PresentationPage() {
     // ============================================
     <TitleSlide
       key="title"
-      badge="ГОСТ 7.32-2017"
-      title="Оформляйте документы"
-      highlight="автоматически"
-      subtitle="Шаблон для оформления работ в соответствии с ГОСТ 7.32-2017. Сосредоточьтесь на содержании, а не на форматировании."
+      title="Автоматизация оформления научных работ согласно"
+      highlight="ГОСТ 7.32-2017"
+      subtitle="Сосредоточьтесь на содержании, не думайте о форматировании."
       showLogo
       showMaiLogo
     />,
@@ -257,12 +256,13 @@ export default function PresentationPage() {
         />
       ),
       type: "default",
+      subslidesType: "workshop",
       subslides: [
         // Workshop 1: Title page with proper closing
         <WorkshopSlide
           key="workshop-title"
           title="Титульный лист"
-          subtitle="Возможность 1"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": gost\n\n', closing: "" },
@@ -282,7 +282,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-numbering"
           title="Автоматическая нумерация"
-          subtitle="Возможность 2"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "= Введение\n\n" },
@@ -299,7 +299,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-tables"
           title="Таблицы по ГОСТ"
-          subtitle="Возможность 3"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "#figure(\n", closing: ")" },
@@ -320,7 +320,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-figures"
           title="Рисунки и подписи"
-          subtitle="Возможность 4"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "#figure(\n", closing: ")" },
@@ -338,7 +338,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-abstract"
           title="Автоматический реферат"
-          subtitle="Возможность 5"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": abstract\n\n', closing: "" },
@@ -357,7 +357,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-bib"
           title="Библиография"
-          subtitle="Возможность 6"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "#bibliography(\n", closing: ")" },
@@ -375,7 +375,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-code"
           title="Листинги кода"
-          subtitle="Возможность 7"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "#figure(\n", closing: ")" },
@@ -395,7 +395,7 @@ export default function PresentationPage() {
         <WorkshopSlide
           key="workshop-speed"
           title="Скорость компиляции"
-          subtitle="Возможность 8"
+          subtitle="Мастерская"
           initialCode=""
           steps={[
             { action: "type", text: "#set page(\n", closing: ")" },
