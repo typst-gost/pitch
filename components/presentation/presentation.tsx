@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef, type ReactNode, createContext, useContext } from "react"
+import { useState, useCallback, useEffect, useRef, type ReactNode, createContext, useContext, isValidElement, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { AnimatedBackground } from "./animated-background"
 import { SlideWrapper } from "./slide-wrapper"
@@ -8,6 +8,7 @@ import { SlideNavigation } from "./slide-navigation"
 import { SlideOverview } from "./slide-overview"
 import { useHideCursor } from "./hooks/use-hide-cursor"
 import { SlideCounter } from "./slide-counter"
+import React from "react"
 
 interface SlideContextValue {
   isWorkshop: boolean
@@ -38,6 +39,7 @@ interface PresentationProps {
 }
 
 interface FlatSlide {
+  id: string
   component: ReactNode
   type: "default" | "workshop" | "gallery"
   isSubslide: boolean
@@ -45,17 +47,25 @@ interface FlatSlide {
   numberingPosition: "left" | "center" | "right"
 }
 
+function getSlideId(node: ReactNode, fallbackIndex: number): string {
+  if (isValidElement(node) && node.key) {
+    return String(node.key).replace(/^\.\$/, "")
+  }
+  return `slide-${fallbackIndex}`
+}
+
 function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
   const result: FlatSlide[] = []
+  
   slides.forEach((slide, parentIndex) => {
     if (slide && typeof slide === "object" && "component" in slide) {
       const config = slide as SlideConfig
       const numberingPosition = config.numberingPosition || "right"
-      
       const parentType = config.type || "default"
       const childrenType = config.subslidesType || parentType 
 
       result.push({
+        id: getSlideId(config.component, result.length),
         component: config.component,
         type: parentType, 
         isSubslide: false,
@@ -65,6 +75,7 @@ function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
       if (config.subslides) {
         config.subslides.forEach((sub) => {
           result.push({
+            id: getSlideId(sub, result.length),
             component: sub,
             type: childrenType,
             isSubslide: true,
@@ -74,8 +85,10 @@ function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
         })
       }
     } else {
+      const node = slide as ReactNode
       result.push({
-        component: slide as ReactNode,
+        id: getSlideId(node, result.length),
+        component: node,
         type: "default",
         isSubslide: false,
         numberingPosition: "right",
@@ -85,8 +98,10 @@ function normalizeSlides(slides: (ReactNode | SlideConfig)[]): FlatSlide[] {
   return result
 }
 
-
 export function Presentation({ slides }: PresentationProps) {
+  // Исправление: используем useMemo, чтобы массив не пересоздавался при каждом рендере
+  const flatSlides = useMemo(() => normalizeSlides(slides), [slides])
+  
   const [currentSlide, setCurrentSlide] = useState(0)
   const [direction, setDirection] = useState<"up" | "down" | "left" | "right">("right")
   const [transitionType, setTransitionType] = useState<
@@ -99,11 +114,41 @@ export function Presentation({ slides }: PresentationProps) {
 
   const stepHandlerRef = useRef<(() => boolean) | null>(null)
 
-  const flatSlides = normalizeSlides(slides)
-
   const registerStepHandler = useCallback((handler: (() => boolean) | null) => {
     stepHandlerRef.current = handler
   }, [])
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1)
+      if (!hash) return
+
+      const slideIndex = flatSlides.findIndex((slide) => slide.id === hash)
+
+      if (slideIndex !== -1) {
+        setCurrentSlide(slideIndex)
+        setIsWorkshop(flatSlides[slideIndex].type === "workshop")
+      }
+    }
+
+    // Вызываем сразу, чтобы обработать начальный хеш
+    handleHashChange()
+
+    window.addEventListener('hashchange', handleHashChange)
+    return () => window.removeEventListener('hashchange', handleHashChange)
+  }, [flatSlides])
+
+  // Синхронизация стейта с URL (добавляет хеш при переключении слайдов)
+  useEffect(() => {
+    const currentId = flatSlides[currentSlide]?.id
+    if (currentId) {
+      const newHash = `#${currentId}`
+      // Используем replaceState, чтобы не загрязнять историю браузера каждым кликом
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, "", newHash)
+      }
+    }
+  }, [currentSlide, flatSlides])
 
   const getTransitionType = useCallback(
     (fromIndex: number, toIndex: number) => {
@@ -265,7 +310,6 @@ export function Presentation({ slides }: PresentationProps) {
       <div className="fixed inset-0 bg-background overflow-hidden">
         <AnimatedBackground isWorkshop={isWorkshop} />
 
-        {/* Нумерация слайдов */}
         <AnimatePresence>
           {currentSlide > 0 && (
             <SlideCounter 

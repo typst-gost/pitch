@@ -14,24 +14,211 @@ import { QuoteSlide } from "@/components/presentation/slides/quote-slide"
 import { DetailSlide } from "@/components/presentation/slides/detail-slide"
 import { WorkshopSlide } from "@/components/presentation/slides/workshop-slide"
 import { GallerySlide } from "@/components/presentation/slides/gallery-slide"
-import { PDFViewerSlide } from "@/components/presentation/slides/pdf-viewer-slide"
 import { QRLinkSlide } from "@/components/presentation/slides/qr-link-slide"
-import {
-  Zap,
-  Code2,
-  FileText,
-  BookOpen,
-  Brain,
-  ArrowUpCircle,
-  Layout,
-  ListOrdered,
-  Table,
-  ImageIcon,
-  AlertTriangle,
+
+import { 
+  Layout, FileText, ListOrdered, Image as ImageIcon, 
+  Table, Sigma, Code2, BookOpen, Paperclip, 
+  Files, FileType2, AlertTriangle,
   Clock,
   RefreshCw,
+  Zap,
   FileWarning,
+  ArrowUpCircle,
+  Brain, 
 } from "lucide-react"
+
+// ... imports
+
+// 1. Префикс для "внутренних" слайдов, чтобы сразу работать с контентом
+// Мы скрываем титульник, чтобы видеть результаты (таблицы, формулы) сразу.
+const contentPrefix = `
+#import "@preview/modern-g7-32:0.2.0": *\n
+#show: gost.with(
+  hide-title: true,
+  text-size: (default: 14pt),
+)\n\n#set page(width: 400pt, height: auto, margin: 20pt, fill: white, footer: none)\n\n`
+
+// 2. Префикс только для титульного листа (без вызова show)
+const setupPrefix = `#import "@preview/modern-g7-32:0.2.0": gost, abstract, appendixes\n\n#set page(fill: white)\n\n`
+
+export const subslides = [
+    // ... предыдущие слайды
+    
+   // ============================================
+    // SLIDES 8+: Feature Workshops
+    // ============================================
+        
+        // 1. ТИТУЛЬНЫЙ ЛИСТ (Пишем конфиг с нуля)
+        <WorkshopSlide
+          key="workshop-title"
+          title="Настройка титульного листа"
+          subtitle="Мастерская"
+          hiddenPrefix={setupPrefix} 
+          steps={[
+            { action: "type", text: "#show: gost.with(\n", closing: ")" },
+            { action: "type", text: '  ministry: "Минобрнауки РФ",\n', closing: ")" },
+            { action: "type", text: '  organization: (full: "МГТУ им. Н.Э. Баумана"),\n', closing: ")" },
+            { action: "type", text: '  research: "Разработка шаблона Typst",\n', closing: ")" },
+            { action: "type", text: '  about: "курсовая работа",\n', closing: ")" },
+            { action: "type", text: '  manager: (name: "Иванов И.И.", position: "доцент"),\n', closing: ")" },
+            { action: "type", text: "  performers: (\n", closing: "))" },
+            { action: "type", text: '    (name: "Елисеев П.А.", part: "разработка"),\n', closing: "))" },
+            { action: "type", text: "  ),\n", closing: ")" },
+            { action: "type", text: "  city: \"Москва\",\n", closing: ")" },
+            { action: "type", text: "  year: auto,\n", closing: ")" },
+            { action: "type", text: ")" },
+          ]}
+          typeSpeed={30}
+        />,
+
+        // 2. РЕФЕРАТ (Abstract)
+        <WorkshopSlide
+          key="workshop-abstract"
+          title="Реферат"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#abstract(\n", closing: ")" },
+            { action: "type", text: '  "автоматизация",\n', closing: ")" },
+            { action: "type", text: '  "документооборот",\n', closing: ")" },
+            { action: "type", text: '  "typst"\n', closing: ")" },
+            { action: "type", text: ")[\n", closing: ")]" },
+            { action: "type", text: "  Настоящий документ описывает шаблон.\n", closing: "]" },
+            { action: "type", text: "  Количество страниц считается автоматически.\n", closing: "]" },
+            { action: "type", text: "]" },
+          ]}
+          typeSpeed={35}
+        />,
+
+        // 3. СОДЕРЖАНИЕ И ЗАГОЛОВКИ
+        <WorkshopSlide
+          key="workshop-outline"
+          title="Содержание"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#outline()\n\n" },
+            { action: "pause", delay: 400 },
+            { action: "type", text: "= Введение\n" },
+            { action: "type", text: "Шаблон modern-g7-32 упрощает жизнь.\n\n" },
+            { action: "type", text: "= Основная часть\n" },
+            { action: "type", text: "== Обзор технологий\n" },
+            { action: "type", text: "Typst — это современная система вёрстки." },
+          ]}
+          typeSpeed={38}
+        />,
+
+        // 4. ТАБЛИЦЫ
+        <WorkshopSlide
+          key="workshop-table"
+          title="Таблицы"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: "  table(\n", closing: "))" },
+            { action: "type", text: "    columns: 3,\n", closing: "))" },
+            { action: "type", text: "    table.header([Параметр], [Знач.], [Ед.]),\n", closing: "))" },
+            { action: "pause", delay: 300 },
+            { action: "type", text: "    [Мощность], [100], [Вт],\n", closing: "))" },
+            { action: "type", text: "    [Вес], [2.5], [кг],\n", closing: "))" },
+            { action: "type", text: "  ),\n", closing: ")" },
+            { action: "type", text: "  caption: [Характеристики устройства]\n", closing: ")" },
+            { action: "type", text: ") <tab:specs>\n\n" },
+            { action: "pause", delay: 300 },
+            { action: "type", text: "См. таблицу @tab:specs." },
+          ]}
+          typeSpeed={35}
+        />,
+
+        // 5. РИСУНКИ
+        <WorkshopSlide
+          key="workshop-image"
+          title="Рисунки"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: '  image("images/schema.png", width: 80%),\n', closing: ")" },
+            { action: "pause", delay: 400 },
+            { action: "type", text: "  caption: [Структурная схема]\n", closing: ")" },
+            { action: "type", text: ") <fig:schema>\n\n" },
+            { action: "type", text: "На рисунке @fig:schema показана схема." },
+          ]}
+          typeSpeed={38}
+        />,
+
+        // 6. ФОРМУЛЫ
+        <WorkshopSlide
+          key="workshop-equations"
+          title="Формулы"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "Расчет суммы:\n" },
+            { action: "type", text: "$ sum_(k=0)^n k = (n(n+1)) / 2 $ <eq:sum>\n\n" },
+            { action: "pause", delay: 400 },
+            { action: "type", text: "Матричное уравнение:\n" },
+            { action: "type", text: "$ mat(1, 2; 3, 4) * x = vec(5, 6) $" },
+          ]}
+          typeSpeed={40}
+        />,
+
+        // 7. ЛИСТИНГИ КОДА
+        <WorkshopSlide
+          key="workshop-code"
+          title="Листинги кода"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: "  ``````\n)" },
+            { action: "type", text: "  fn main() {\n", closing: "\n  }\n  ```"},
+            { action: "type", text: '    println!("Hello, World!");\n', closing: "  }\n  ```\n)" },
+            { action: "type", text: "  }\n", closing: "  ```"},
+            { action: "type", text: "  ```,\n", closing: ")" },
+            { action: "type", text: "  caption: [Код на Rust]\n", closing: ")" },
+            { action: "type", text: ")" },
+          ]}
+          typeSpeed={35}
+        />,
+
+        <WorkshopSlide
+          key="workshop-bib"
+          title="Библиография"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#figure(\n", closing: ")" },
+            { action: "type", text: "  ``````\n)" },
+            { action: "type", text: "  fn main() {\n", closing: "\n  }\n  ```"},
+            { action: "type", text: '    println!("Hello, World!");\n', closing: "  }\n  ```\n)" },
+            { action: "type", text: "  }\n", closing: "  ```"},
+            { action: "type", text: "  ```,\n", closing: ")" },
+            { action: "type", text: "  caption: [Код на Rust]\n", closing: ")" },
+            { action: "type", text: ")" },
+          ]}
+          typeSpeed={35}
+        />,
+
+        // 8. ПРИЛОЖЕНИЯ
+        <WorkshopSlide
+          key="workshop-appendix"
+          title="Приложения"
+          subtitle="Мастерская"
+          hiddenPrefix={contentPrefix}
+          steps={[
+            { action: "type", text: "#show: appendixes\n\n" },
+            { action: "type", text: "#appendix-heading(\"справочное\")[Текст приложения]\n" },
+            { action: "type", text: "#lorem(50)\n\n" },
+            { action: "type", text: "Как видно на рисунке @app-img...\n" },
+            { action: "type", text: "#figure(image(\"graph.png\"), caption: \"График\") <app-img>" },
+          ]}
+          typeSpeed={40}
+        />,
+      ]
+
 
 export default function PresentationPage() {
   const slides: (React.ReactNode | SlideConfig)[] = [
@@ -57,9 +244,9 @@ export default function PresentationPage() {
           title="Проблемы существующих подходов"
           subtitle="Почему нужен новый инструмент"
           bullets={[
-            "Рутинные действия при оформлении отчётов в Word",
-            "Сложный синтаксис и медленная компиляция LaTeX",
+            "Рутинные действия при оформлении отчётов",
             "Ручное оформление ссылок и нумерации",
+            "Сложный синтаксис и медленная компиляция",
             "Проблемы с надёжностью и воспроизводимостью",
           ]}
           expandable
@@ -72,66 +259,67 @@ export default function PresentationPage() {
           subheading="Рассмотрим подробнее"
           heading="Рутинные действия в Word"
           layout="text-left-image-right"
-          image="/microsoft-word-document-formatting-frustration.jpg"
+          image="/word.png"
           content={
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
                 <span>Ручная настройка полей, шрифтов и отступов</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-destructive shrink-0" />
                 <span>Потеря времени на форматирование вместо содержания</span>
               </li>
-              <li className="flex items-start gap-3">
-                <RefreshCw className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <RefreshCw className="w-5 h-5 text-destructive shrink-0" />
                 <span>Постоянные исправления при изменении структуры</span>
               </li>
             </ul>
           }
         />,
-        // Subslide 2.2: LaTeX complexity
+        // Subslide 2.2: Manual references
         <DetailSlide
           key="problem-2"
           subheading="Рассмотрим подробнее"
+          heading="Риск неактуальных ссылок"
+          layout="image-top-text-bottom"
+          image="/ref-issue.png"
+          content="В Word перекрёстные ссылки не обновляются автоматически при редактировании. Нужно не забывать принудительно обновлять все поля (F9) перед каждым сохранением, иначе нумерация в тексте разойдется с реальной. В modern-g7-32 ссылки всегда актуальны благодаря компиляции."
+        />,
+        // Subslide 2.3: LaTeX complexity
+        <DetailSlide
+          key="problem-3"
+          subheading="Рассмотрим подробнее"
           heading="Сложность LaTeX"
           layout="image-left-text-right"
-          image="/latex-complex-code-terminal-compilation.jpg"
+          image="/latex.png"
           content={
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <FileWarning className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <FileWarning className="w-5 h-5 text-destructive shrink-0" />
                 <span>Громоздкий синтаксис с множеством команд</span>
               </li>
-              <li className="flex items-start gap-3">
-                <Clock className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <Clock className="w-5 h-5 text-destructive shrink-0" />
                 <span>Медленная компиляция больших документов</span>
               </li>
-              <li className="flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 text-destructive mt-1 shrink-0" />
+              <li className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
                 <span>Сложная настройка окружения и пакетов</span>
               </li>
             </ul>
           }
-        />,
-        // Subslide 2.3: Manual references
-        <DetailSlide
-          key="problem-3"
-          subheading="Рассмотрим подробнее"
-          heading="Ручное оформление ссылок"
-          layout="text-only-centered"
-          content="При изменении структуры документа приходится вручную обновлять все ссылки на рисунки, таблицы и источники. Одна ошибка — и вся нумерация сбивается."
         />,
         // Subslide 2.4: Reliability
         <DetailSlide
           key="problem-4"
           subheading="Рассмотрим подробнее"
           heading="Проблемы воспроизводимости"
-          layout="text-left-image-right"
-          image="/document-versioning-merge-conflict-chaos.jpg"
+          layout="text-only-centered"
           content="Разные версии программ, шрифтов и шаблонов приводят к непредсказуемому результату. Документ, открытый на другом компьютере, может выглядеть совершенно иначе."
         />,
       ],
+
     },
 
     // ============================================
@@ -168,13 +356,26 @@ export default function PresentationPage() {
     // ============================================
     <QuoteSlide
       key="typst-intro"
-      quote="Typst — это современная система вёрстки документов с открытым исходным кодом. Она работает быстрее LaTeX и позволяет сосредоточиться на содержании."
+      quote="Typst — это новая система верстки на основе разметки, ориентированная на научные тексты."
       author="Typst"
       role="Официальная документация"
     />,
 
+    <DetailSlide
+      key="easy-usage"
+      subheading="Веб-редактор Typst"
+      heading="Простота в использовании"
+      layout="text-left-image-right"
+      image="/typst-app.png"
+      variant="mockup"
+      imageScale={1.5}
+      offset={{ x: 250, y: 0 }}
+      edge="right"
+      content="Разные версии программ, шрифтов и шаблонов приводят к непредсказуемому результату. Документ, открытый на другом компьютере, может выглядеть совершенно иначе."
+    />,
+
     // ============================================
-    // SLIDE 5: First Workshop - Typst Basics
+    // SLIDE 6: First Workshop - Typst Basics
     // ============================================
     {
       component: (
@@ -182,7 +383,7 @@ export default function PresentationPage() {
           key="workshop-typst-intro"
           title="Знакомство с Typst"
           subtitle="Мастерская"
-          initialCode=""
+          hiddenPrefix="#set page(width: 200pt, height: auto, margin: 20pt, fill: white, footer: none)"
           steps={[
             { action: "type", text: "= Привет, Typst!\n\n" },
             { action: "pause", delay: 500 },
@@ -193,8 +394,66 @@ export default function PresentationPage() {
             { action: "type", text: "- Первый пункт\n" },
             { action: "type", text: "- Второй пункт\n" },
             { action: "type", text: "- Третий пункт" },
+            { action: "wait" },
+            { action: "clear" },
+
+            // Пример 1: Площадка Typst (упрощенная версия)
+            { action: "type", text: "#set page(paper: \"a5\", height: auto)\n" },
+            { action: "type", text: "#set heading(numbering: \"1.\")\n\n" },
+            { action: "type", text: "#show link: set text(fill: blue, weight: 700)\n" },
+            { action: "type", text: "#show link: underline\n\n" },
+            { action: "type", text: "= Мастерская Typst\n\n" },
+            { action: "type", text: "Добро пожаловать на площадку Typst! Тут мы будем экспериментировать с Typst. " },
+            { action: "type", text: "Код слева превращается в результат справа! " },
+            { action: "type", text: "Панель предварительного просмотра справа будет обновляться в реальном времени.\n\n" },
+            { action: "type", text: "= Основы <basics>\n\n" },
+            { action: "type", text: "Typst — это _язык разметки_. " },
+            { action: "type", text: "Среди прочего, вы можете использовать его для:\n\n" },
+            { action: "type", text: "- *Сильного выделения* текста\n" },
+            { action: "type", text: "- Ссылки на @basics\n" },
+            { action: "type", text: "- Набора математики: $a, b in { 1/2, sqrt(4 a b) }$\n\n" },
+            { action: "type", text: "Но это только поверхность! " },
+            { action: "type", text: "Typst имеет мощные системы для скриптинга, стилизации, интроспекции и многого другого.\n\n" },
+            { action: "type", text: "= Следующие шаги\n\n" },
+            { action: "type", text: "Чтобы узнать больше о Typst, рекомендуем ознакомиться с нашим руководством на " },
+            { action: "type", text: "#link('https://typst.app/')[typst]" },
+
+            // Переход ко второму примеру
+            { action: "wait" },
+            { action: "clear" },
+
+            // Пример 2: Игра Soviet Matrix
+            { action: "type", text: "#import \"@preview/soviet-matrix:0.2.1\": game\n" },
+            { action: "type", text: "#show: game.with(seed: 123)\n\n" },
+            { action: "type", text: "aaeadeffdddfdddeaeafaaafaadfaaeddeddeddfdddfdedddddfaaef\n" },
+            { action: "type", text: "aeedededddfsaceeedfceafeaaafeefdddfddddfdddfaaaddddafadd\n" },
+            { action: "type", text: "ddddfaeafeaaaaf" },
+
+            // Переход к третьему примеру
+            { action: "wait" },
+            { action: "clear" },
+
+            // Пример 3: Научная статья IEEE
+            { action: "type", text: "#import \"@preview/charged-ieee:0.1.4\": ieee\n\n" },
+            { action: "type", text: "#show: ieee.with(\n", closing: ")" },
+            { action: "type", text: "  title: [Система верстки для упрощения процесса научного письма],\n", closing: ")" },
+            { action: "type", text: "  abstract: [\n", closing: "])" },
+            { action: "type", text: "    Процесс научного письма часто запутан из-за сложностей верстки, " },
+            { action: "type", text: "что приводит к разочарованию и потере времени исследователями. " },
+            { action: "type", text: "Typst упрощает процесс верстки, позволяя исследователям создавать статьи быстрее.\n", closing: "])" },
+            { action: "type", text: "  ],\n", closing: ")" },
+            { action: "type", text: "  authors: (\n", closing: "))" },
+            { action: "type", text: "    (\n", closing: "),))" },
+            { action: "type", text: "      name: \"Мартин Хауг\",\n", closing: "),))" },
+            { action: "type", text: "      organization: [Typst GmbH],\n", closing: "),))" },
+            { action: "type", text: "      location: [Берлин, Германия],\n", closing: "),))" },
+            { action: "type", text: "      email: \"haug@typst.app\"\n", closing: "),))" },
+            { action: "type", text: "    ),\n", closing: "))" },
+            { action: "type", text: "  ),\n", closing: ")" },
+            { action: "type", text: "  index-terms: (\"Научное письмо\", \"Верстка\", \"Создание документов\"),\n", closing: ")" },
+            { action: "type", text: ")\n\n" },
           ]}
-          typeSpeed={35}
+          typeSpeed={50}
           humanize={true}
         />
       ),
@@ -222,16 +481,10 @@ export default function PresentationPage() {
       key="template-intro"
       subheading="Шаблон"
       heading="modern-g7-32"
-      layout="text-only-centered"
+      layout="text-left-image-right"
+      variant="mockup"
+      image="/modern-g7-32.png"
       content="Шаблон для автоматического оформления отчётов по ГОСТ 7.32-2017. Поддерживает титульные листы вузов, автоматическую нумерацию, библиографию и многое другое."
-    />,
-
-    // SLIDE 7: PDF Viewer for template example
-    <PDFViewerSlide
-      key="pdf-example"
-      title="Пример готового документа"
-      subtitle="modern-g7-32"
-      description="Документ полностью соответствует требованиям ГОСТ 7.32-2017"
     />,
 
     // ============================================
@@ -243,174 +496,25 @@ export default function PresentationPage() {
           key="features-overview"
           title="Возможности шаблона"
           subtitle="modern-g7-32"
+          // FIXME: Поправить иконки
           features={[
-            { icon: Layout, title: "Титульный лист", description: "Автоматическое формирование по шаблону вуза" },
-            { icon: ListOrdered, title: "Нумерация", description: "Все элементы нумеруются автоматически" },
-            { icon: Table, title: "Таблицы", description: "Оформление согласно ГОСТ" },
-            { icon: ImageIcon, title: "Рисунки", description: "Подписи и нумерация автоматически" },
-            { icon: FileText, title: "Реферат", description: "Автоматическая генерация" },
-            { icon: BookOpen, title: "Библиография", description: "Форматирование источников" },
-            { icon: Code2, title: "Листинги", description: "Подсветка синтаксиса кода" },
-            { icon: Zap, title: "Скорость", description: "Компиляция за миллисекунды" },
+            { icon: Layout, title: "Титульный лист", description: "Гибкая настройка по ГОСТ 7.32-2017" },
+            { icon: Files, title: "Шаблоны", description: "Готовые пресеты для вузов и организаций" },
+            { icon: ListOrdered, title: "Структура", description: "Авто-нумерация рубрик и перечней" },
+            { icon: FileText, title: "Реферат", description: "Автоматический подсчет страниц и источников" },
+            { icon: FileType2, title: "Содержание", description: "Генерация оглавления одной командой" },
+            { icon: ImageIcon, title: "Рисунки", description: "Удобная вставка с подписями" },
+            { icon: Table, title: "Таблицы", description: "Оформление заголовков и продолжений" },
+            { icon: Sigma, title: "Формулы", description: "Математический синтаксис Typst" },
+            { icon: Code2, title: "Листинги", description: "Блоки кода с подсветкой синтаксиса" },
+            { icon: BookOpen, title: "Библиография", description: "Поддержка BibTeX/Hayagriva и ГОСТ 7.0.5" },
+            { icon: Paperclip, title: "Приложения", description: "Сквозная нумерация приложений" },
           ]}
         />
       ),
       type: "default",
       subslidesType: "workshop",
-      subslides: [
-        // Workshop 1: Title page with proper closing
-        <WorkshopSlide
-          key="workshop-title"
-          title="Титульный лист"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": gost\n\n', closing: "" },
-            { action: "pause", delay: 400 },
-            { action: "type", text: "#show: gost.with(\n", closing: ")" },
-            { action: "type", text: "  title-template: title-templates.mai,\n", closing: ")" },
-            { action: "pause", delay: 300 },
-            { action: "type", text: "  performers: (\n", closing: "))" },
-            { action: "type", text: '    (name: "Елисеев П.А."),\n', closing: "))" },
-            { action: "type", text: "  ),\n", closing: ")" },
-            { action: "type", text: ")" },
-          ]}
-          typeSpeed={30}
-        />,
-
-        // Workshop 2: Auto numbering
-        <WorkshopSlide
-          key="workshop-numbering"
-          title="Автоматическая нумерация"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "= Введение\n\n" },
-            { action: "type", text: "Текст введения...\n\n" },
-            { action: "pause", delay: 500 },
-            { action: "type", text: "= Основная часть\n\n" },
-            { action: "type", text: "== Теоретические основы\n\n" },
-            { action: "type", text: "Текст раздела..." },
-          ]}
-          typeSpeed={40}
-        />,
-
-        // Workshop 3: Tables
-        <WorkshopSlide
-          key="workshop-tables"
-          title="Таблицы по ГОСТ"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "#figure(\n", closing: ")" },
-            { action: "type", text: "  table(\n", closing: "))" },
-            { action: "type", text: "    columns: 3,\n", closing: "))" },
-            { action: "pause", delay: 300 },
-            { action: "type", text: "    [Параметр], [Значение], [Ед. изм.],\n", closing: "))" },
-            { action: "type", text: "    [Мощность], [100], [Вт],\n", closing: "))" },
-            { action: "type", text: "    [Масса], [2.5], [кг],\n", closing: "))" },
-            { action: "type", text: "  ),\n", closing: ")" },
-            { action: "type", text: "  caption: [Характеристики устройства]\n", closing: ")" },
-            { action: "type", text: ") <tab:specs>" },
-          ]}
-          typeSpeed={35}
-        />,
-
-        // Workshop 4: Figures
-        <WorkshopSlide
-          key="workshop-figures"
-          title="Рисунки и подписи"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "#figure(\n", closing: ")" },
-            { action: "type", text: '  image("schema.png", width: 80%),\n', closing: ")" },
-            { action: "pause", delay: 400 },
-            { action: "type", text: "  caption: [Структурная схема системы]\n", closing: ")" },
-            { action: "type", text: ") <fig:schema>\n\n" },
-            { action: "pause", delay: 500 },
-            { action: "type", text: "На @fig:schema показана схема." },
-          ]}
-          typeSpeed={38}
-        />,
-
-        // Workshop 5: Abstract
-        <WorkshopSlide
-          key="workshop-abstract"
-          title="Автоматический реферат"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: '#import "@preview/modern-g7-32:0.2.0": abstract\n\n', closing: "" },
-            { action: "pause", delay: 400 },
-            { action: "type", text: "#abstract(\n", closing: ")" },
-            { action: "type", text: '  "АВТОМАТИЗАЦИЯ", "ГОСТ", "TYPST"\n', closing: ")" },
-            { action: "type", text: ")[\n", closing: "]" },
-            { action: "type", text: "  Настоящий документ описывает\n", closing: "]" },
-            { action: "type", text: "  шаблон modern-g7-32...\n", closing: "]" },
-            { action: "type", text: "]" },
-          ]}
-          typeSpeed={32}
-        />,
-
-        // Workshop 6: Bibliography
-        <WorkshopSlide
-          key="workshop-bib"
-          title="Библиография"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "#bibliography(\n", closing: ")" },
-            { action: "type", text: '  "refs.bib",\n', closing: ")" },
-            { action: "type", text: '  style: "gost-r-7-0-5-2008-numeric"\n', closing: ")" },
-            { action: "type", text: ")\n\n" },
-            { action: "pause", delay: 500 },
-            { action: "type", text: "// В тексте:\n" },
-            { action: "type", text: "Согласно @smith2023..." },
-          ]}
-          typeSpeed={35}
-        />,
-
-        // Workshop 7: Code listings
-        <WorkshopSlide
-          key="workshop-code"
-          title="Листинги кода"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "#figure(\n", closing: ")" },
-            { action: "type", text: "  ```python\n" },
-            { action: "type", text: "  def hello():\n", closing: "```"},
-            { action: "type", text: '      print("Hello!")\n', closing: "```\n)" },
-            { action: "type", text: "  ```\n"},
-            { action: "type", text: ") <listing>\n\n" },
-            { action: "pause", delay: 200 },
-            { action: "type", text: "#lorem(50)\n\n" },
-            { action: "type", text: "В @listing показан пример." },
-          ]}
-          typeSpeed={40}
-        />,
-
-        // Workshop 8: Speed demonstration
-        <WorkshopSlide
-          key="workshop-speed"
-          title="Скорость компиляции"
-          subtitle="Мастерская"
-          initialCode=""
-          steps={[
-            { action: "type", text: "#set page(\n", closing: ")" },
-            { action: "type", text: "  width: 210mm,\n", closing: ")" },
-            { action: "type", text: "  height: 297mm,\n", closing: ")" },
-            { action: "pause", delay: 300 },
-            { action: "type", text: "  margin: 20mm\n", closing: ")" },
-            { action: "type", text: ")\n\n" },
-            { action: "pause", delay: 400 },
-            { action: "type", text: "= Большой документ\n\n" },
-            { action: "type", text: "Компилируется за миллисекунды!" },
-          ]}
-          typeSpeed={40}
-        />,
-      ],
+      subslides: subslides,
     },
 
     // ============================================
@@ -443,6 +547,8 @@ export default function PresentationPage() {
       description="Присоединяйтесь к нашему сообществу в Telegram! Здесь вы можете задать вопросы, поделиться опытом и следить за обновлениями проекта."
       link="https://t.me/typst_gost"
       linkLabel="Присоединиться"
+      showMembersCounter={true}
+      telegramChatId="@typst_gost"
     />,
 
     // ============================================
@@ -454,8 +560,8 @@ export default function PresentationPage() {
       subtitle="В цифрах"
       metrics={[
         { value: 3, label: "Дипломные работы", description: "Написано с помощью шаблона" },
-        { value: 50, suffix: "+", label: "Курсовых работ", description: "Разработано на Typst" },
-        { value: 70, suffix: "+", label: "Участников", description: "В телеграм-сообществе" },
+        { value: 20, suffix: "+", label: "Курсовых работ", description: "Разработано на Typst" },
+        { value: 70, suffix: "+", label: "Лабораторных работ", description: "И это только наши" },
       ]}
     />,
 
@@ -490,20 +596,16 @@ export default function PresentationPage() {
     // ============================================
     <CTASlide
       key="cta"
-      title="Начните использовать уже сегодня"
+      title="Начните использовать уже сегодня!"
       subtitle="typst-gost.ru"
-      ctaText="Открыть документацию"
       showLogo
       author={{
         name: "Елисеев Павел",
+        avatar: "/avatar.png",
         email: "forgenet@inbox.ru",
       }}
-      qrCodes={[{ label: "Сайт" }, { label: "Telegram" }, { label: "Автор" }]}
-      links={[
-        { label: "Сайт проекта", url: "https://typst-gost.ru" },
-        { label: "Сообщество", url: "https://t.me/typst_gost" },
-        { label: "GitHub", url: "https://github.com/typst-g7-32" },
-      ]}
+      qrCodes={[{ label: "Сайт", url: "https://typst-gost.ru" }, { label: "Telegram", url: "https://t.me/typst_gost" }, { label: "Автор", url: "https://t.me/ne4genet" }]}
+      footerText="Презентация доступна по ссылке pitch.typst-gost.ru"
     />,
   ]
 

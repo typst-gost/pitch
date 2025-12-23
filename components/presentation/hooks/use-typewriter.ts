@@ -6,7 +6,7 @@ import { useSlideContext } from "../presentation"
 export interface TypewriterStep {
   action: "type" | "delete" | "replace" | "pause" | "clear" | "wait"
   text?: string
-  closing?: string // Скрытый текст для автозакрытия скобок
+  closing?: string
   position?: number
   length?: number
   delay?: number
@@ -45,30 +45,49 @@ export function useTypewriter(config: TypewriterConfig) {
     return [{ action: "wait" } as TypewriterStep, ...userSteps]
   }, [userSteps])
 
+  // --- STATE ---
   const [text, setText] = useState(initialText)
   const [currentClosing, setCurrentClosing] = useState("")
   const [isWaiting, setIsWaiting] = useState(autoStart)
   const [isTyping, setIsTyping] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
-  const [charIndex, setCharIndex] = useState(0)
 
+  // --- REFS (State of Truth) ---
+  const charIndexRef = useRef(0)
+  const textRef = useRef(initialText)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const mountedRef = useRef(false)
 
-  const getDelay = useCallback(
-    (baseDelay: number) => {
-      if (!humanize) return baseDelay
-      const variation = (Math.random() - 0.5) * 2 * humanizeRange
-      const extraPause = Math.random() < 0.1 ? Math.random() * 150 : 0
-      return Math.max(10, baseDelay + variation + extraPause)
-    },
-    [humanize, humanizeRange],
-  )
+  // --- LATEST REFS (Для разрыва зависимости от рендера) ---
+  // Эти рефы позволяют читать актуальные пропсы внутри useEffect без его перезапуска
+  const stepsRef = useRef(steps)
+  const configRef = useRef({ typeSpeed, deleteSpeed, humanize, humanizeRange })
+  const callbacksRef = useRef({ onStepComplete, onComplete })
+
+  // Синхронизируем рефы с пропсами при каждом рендере
+  stepsRef.current = steps
+  configRef.current = { typeSpeed, deleteSpeed, humanize, humanizeRange }
+  callbacksRef.current = { onStepComplete, onComplete }
+
+  useEffect(() => {
+    mountedRef.current = true
+    return () => { mountedRef.current = false }
+  }, [])
+
+  // Расчет задержки (читает из Ref, чтобы не зависеть от пропсов)
+  const getDelay = useCallback((baseDelay: number) => {
+    const { humanize, humanizeRange } = configRef.current
+    if (!humanize) return baseDelay
+    const variation = (Math.random() - 0.5) * 2 * humanizeRange
+    const extraPause = Math.random() < 0.1 ? Math.random() * 150 : 0
+    return Math.max(10, baseDelay + variation + extraPause)
+  }, [])
 
   const next = useCallback(() => {
     setIsWaiting(false)
-    setStepIndex((prev) => prev + 1)
-    setCharIndex(0)
     setIsTyping(true)
+    charIndexRef.current = 0
+    setStepIndex((prev) => prev + 1)
   }, [])
 
   useEffect(() => {
@@ -82,39 +101,48 @@ export function useTypewriter(config: TypewriterConfig) {
     registerStepHandler(null)
   }, [isWaiting, next, registerStepHandler])
 
+  // --- ГЛАВНЫЙ ЦИКЛ ---
+  // Зависит ТОЛЬКО от stepIndex и флагов состояния.
+  // НЕ ЗАВИСИТ от steps, config и прочего, что меняется при рендере.
   useEffect(() => {
     if (!isTyping || isWaiting) return
 
-    if (stepIndex >= steps.length) {
-      if (loop && steps.length > 0) {
+    const currentSteps = stepsRef.current
+    
+    // Проверка финиша
+    if (stepIndex >= currentSteps.length) {
+      if (loop && currentSteps.length > 0) {
         setStepIndex(0)
-        setCharIndex(0)
+        charIndexRef.current = 0
+        textRef.current = initialText
+        setText(initialText)
         setCurrentClosing("")
-        if (initialText) setText(initialText)
       } else {
         setIsTyping(false)
         setCurrentClosing("")
-        onComplete?.()
+        callbacksRef.current.onComplete?.()
       }
       return
     }
 
-    const step = steps[stepIndex]
+    const step = currentSteps[stepIndex]
 
-    // Устанавливаем закрывающий хвост в начале шага
-    if (charIndex === 0 && step.closing !== undefined) {
+    if (charIndexRef.current === 0 && step.closing !== undefined) {
       setCurrentClosing(step.closing)
     }
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-
     const completeCurrentStep = () => {
-      onStepComplete?.()
-      setCharIndex(0)
+      if (!mountedRef.current) return
+      callbacksRef.current.onStepComplete?.()
+      charIndexRef.current = 0
       setStepIndex((prev) => prev + 1)
     }
 
-    const processStep = () => {
+    const tick = () => {
+      if (!mountedRef.current) return
+
+      const { typeSpeed, deleteSpeed } = configRef.current
+
       switch (step.action) {
         case "wait":
           setIsWaiting(true)
@@ -122,23 +150,25 @@ export function useTypewriter(config: TypewriterConfig) {
           break
 
         case "type":
-          if (step.text && charIndex < step.text.length) {
-            timeoutRef.current = setTimeout(() => {
-              setText((prev) => prev + step.text![charIndex])
-              setCharIndex((prev) => prev + 1)
-            }, getDelay(step.delay ?? typeSpeed))
+          const textToType = step.text || ""
+          if (charIndexRef.current < textToType.length) {
+            const char = textToType[charIndexRef.current]
+            textRef.current += char
+            setText(textRef.current)
+            charIndexRef.current++
+            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? typeSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
           break
 
         case "delete":
-          const dCount = step.length ?? 1
-          if (charIndex < dCount) {
-            timeoutRef.current = setTimeout(() => {
-              setText((prev) => prev.slice(0, -1))
-              setCharIndex((prev) => prev + 1)
-            }, getDelay(step.delay ?? deleteSpeed))
+          const countToDelete = step.length ?? 1
+          if (charIndexRef.current < countToDelete) {
+            textRef.current = textRef.current.slice(0, -1)
+            setText(textRef.current)
+            charIndexRef.current++
+            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? deleteSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
@@ -148,7 +178,12 @@ export function useTypewriter(config: TypewriterConfig) {
           timeoutRef.current = setTimeout(() => {
             const pos = step.position ?? 0
             const len = step.length ?? 0
-            setText((prev) => prev.slice(0, pos) + (step.text ?? "") + prev.slice(pos + len))
+            const replacement = step.text ?? ""
+            const before = textRef.current.slice(0, pos)
+            const after = textRef.current.slice(pos + len)
+            
+            textRef.current = before + replacement + after
+            setText(textRef.current)
             completeCurrentStep()
           }, getDelay(step.delay ?? typeSpeed))
           break
@@ -159,6 +194,7 @@ export function useTypewriter(config: TypewriterConfig) {
 
         case "clear":
           timeoutRef.current = setTimeout(() => {
+            textRef.current = ""
             setText("")
             completeCurrentStep()
           }, 100)
@@ -166,18 +202,20 @@ export function useTypewriter(config: TypewriterConfig) {
       }
     }
 
-    processStep()
+    tick()
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [stepIndex, charIndex, isTyping, isWaiting, steps, loop, initialText, getDelay, typeSpeed, deleteSpeed, onStepComplete, onComplete])
+  // В зависимостях НЕТ steps, config, getDelay. Только управляющие сигналы.
+  }, [stepIndex, isTyping, isWaiting, loop, initialText, getDelay])
 
   const start = useCallback(() => {
     setIsWaiting(true)
     setIsTyping(false)
     setStepIndex(0)
-    setCharIndex(0)
+    charIndexRef.current = 0
+    textRef.current = initialText
     setText(initialText)
     setCurrentClosing("")
   }, [initialText])
@@ -186,9 +224,10 @@ export function useTypewriter(config: TypewriterConfig) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     setIsTyping(false)
     setIsWaiting(false)
-    setText(initialText)
     setStepIndex(0)
-    setCharIndex(0)
+    charIndexRef.current = 0
+    textRef.current = initialText
+    setText(initialText)
     setCurrentClosing("")
   }, [initialText])
 

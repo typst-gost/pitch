@@ -1,6 +1,7 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState } from "react"
 
 interface AnimatedBackgroundProps {
   isWorkshop?: boolean
@@ -11,14 +12,13 @@ function MarqueeLine({
   children, 
   direction = "left", 
   duration = 100,
-  initialOffset = 0 // Добавили параметр смещения (0-50)
+  initialOffset = 0 
 }: { 
   children: React.ReactNode, 
   direction?: "left" | "right", 
   duration?: number,
   initialOffset?: number
 }) {
-  
   const start = direction === "left" ? -initialOffset : -50 + initialOffset
   const end = direction === "left" ? -50 - initialOffset : 0 + initialOffset
 
@@ -26,7 +26,6 @@ function MarqueeLine({
     <div className="flex overflow-hidden w-full">
       <motion.div
         className="flex gap-16 whitespace-nowrap"
-        // Важно: начальное состояние задаем жестко через style или initial
         initial={{ x: `${start}%` }} 
         animate={{ x: `${end}%` }}
         transition={{
@@ -35,13 +34,54 @@ function MarqueeLine({
           repeat: Number.POSITIVE_INFINITY,
         }}
       >
-        {/* Рендерим 4 раза для запаса */}
         {children}
         {children}
         {children}
         {children}
       </motion.div>
     </div>
+  )
+}
+
+// Вспомогательный компонент для одной частицы, чтобы изолировать логику рандома
+function Particle({ index }: { index: number }) {
+  // Используем useState с функцией инициализации или useEffect для генерации позиций
+  // Но самый надежный способ для SSR - генерировать рандом только после маунта
+  const [mounted, setMounted] = useState(false)
+  const [randomParams, setRandomParams] = useState({
+    left: 0,
+    top: 0,
+    duration: 10,
+    delay: 0
+  })
+
+  useEffect(() => {
+    setRandomParams({
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      duration: 10 + Math.random() * 10,
+      delay: Math.random() * 5
+    })
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return (
+    <motion.div
+      className="absolute w-1 h-1 bg-primary/30 rounded-full"
+      style={{
+        left: `${randomParams.left}%`,
+        top: `${randomParams.top}%`,
+      }}
+      animate={{ y: [0, -100, 0], opacity: [0.2, 0.5, 0.2] }}
+      transition={{
+        duration: randomParams.duration,
+        repeat: Number.POSITIVE_INFINITY,
+        delay: randomParams.delay,
+        ease: "easeInOut",
+      }}
+    />
   )
 }
 
@@ -76,8 +116,7 @@ export function AnimatedBackground({ isWorkshop = false }: AnimatedBackgroundPro
             
             <div className="absolute inset-0 flex flex-col justify-center gap-24 -rotate-12 scale-150 opacity-[0.02] select-none">
               {[...Array(8)].map((_, i) => {
-                 // Генерируем псевдо-случайное смещение от 0 до 40%
-                 // Используем индекс i, чтобы результат был стабильным при ререндере (не дергался), но разным для строк
+                 // Стабильный оффсет на основе индекса
                  const randomOffset = (i * 17) % 40 
 
                  return (
@@ -85,7 +124,7 @@ export function AnimatedBackground({ isWorkshop = false }: AnimatedBackgroundPro
                     <MarqueeLine 
                       direction={i % 2 === 0 ? "left" : "right"} 
                       duration={300 + (i * 20)}
-                      initialOffset={randomOffset} // <-- Передаем смещение
+                      initialOffset={randomOffset}
                     >
                       {wordsGroup}
                     </MarqueeLine>
@@ -94,7 +133,6 @@ export function AnimatedBackground({ isWorkshop = false }: AnimatedBackgroundPro
               })}
             </div>
 
-            {/* ... (остальной код без изменений) ... */}
             <motion.div
               className="absolute w-150 h-150 rounded-full opacity-10"
               style={{
@@ -124,7 +162,6 @@ export function AnimatedBackground({ isWorkshop = false }: AnimatedBackgroundPro
             transition={{ duration: 0.8 }}
             className="absolute inset-0"
           >
-             {/* ... (код дефолтного фона без изменений) ... */}
             <motion.div
               className="absolute w-250 h-250 rounded-full opacity-20"
               style={{
@@ -152,22 +189,10 @@ export function AnimatedBackground({ isWorkshop = false }: AnimatedBackgroundPro
                 backgroundSize: "100px 100px",
               }}
             />
+            
+            {/* Исправление ошибки гидратации: вынесли частицы в отдельный компонент */}
             {[...Array(50)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute w-1 h-1 bg-primary/30 rounded-full"
-                style={{
-                  left: `${Math.random() * 100}%`,
-                  top: `${Math.random() * 100}%`,
-                }}
-                animate={{ y: [0, -100, 0], opacity: [0.2, 0.5, 0.2] }}
-                transition={{
-                  duration: 10 + Math.random() * 10,
-                  repeat: Number.POSITIVE_INFINITY,
-                  delay: Math.random() * 5,
-                  ease: "easeInOut",
-                }}
-              />
+              <Particle key={i} index={i} />
             ))}
           </motion.div>
         )}

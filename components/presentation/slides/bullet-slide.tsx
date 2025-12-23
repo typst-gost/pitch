@@ -50,15 +50,6 @@ export function BulletSlide({ title, bullets, subtitle, expandable, onBulletClic
               className="flex-shrink-0 w-3 h-3 mt-3 rounded-full bg-primary group-hover:shadow-[0_0_20px_rgba(37,99,232,0.5)] transition-shadow duration-300"
             />
             <span className="text-2xl md:text-3xl text-foreground/90 leading-relaxed">{bullet}</span>
-            {expandable && (
-              <motion.span
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.5 }}
-                className="ml-auto text-primary opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                →
-              </motion.span>
-            )}
           </motion.button>
         ))}
       </div>

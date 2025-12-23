@@ -37,7 +37,8 @@ export function TypstPreview({
         setCompiledSvg(processed)
         lastValidSvgRef.current = processed
       }
-    } catch (error) {}
+    } catch (error) {
+    }
   }, [code, compile, hiddenPrefix, hiddenSuffix])
 
   useEffect(() => {

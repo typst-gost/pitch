@@ -2,179 +2,211 @@
 
 import { motion } from "framer-motion"
 import Image from "next/image"
-import { ArrowRight, ExternalLink } from "lucide-react"
+import { ExternalLink, Mail } from "lucide-react"
+import { QRCodeImage } from "@/components/ui/qr-generator"
 
 interface QRItem {
   label: string
-  qrCode?: string // QR image path, if not provided will show placeholder
+  url: string
 }
 
 interface CTASlideProps {
   title: string
   subtitle?: string
-  ctaText?: string
   showLogo?: boolean
   author?: {
     name: string
     email: string
     avatar?: string
+    role?: string
   }
   qrCodes?: QRItem[]
   links?: { label: string; url: string }[]
+  footerText?: string | React.ReactNode // Добавил проп для текста в футере
 }
 
-export function CTASlide({ title, subtitle, ctaText, showLogo = true, author, qrCodes, links }: CTASlideProps) {
+export function CTASlide({ 
+  title, 
+  subtitle, 
+  showLogo = true, 
+  author, 
+  qrCodes, 
+  links,
+  footerText 
+}: CTASlideProps) {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-8">
-      {/* Animated gradient background */}
+    <div className="relative w-full h-full flex flex-col items-center justify-center p-8 lg:p-16 overflow-hidden">
+      {/* Background Ambient Light */}
       <motion.div
-        className="absolute inset-0 opacity-30"
-        style={{
-          background: "radial-gradient(ellipse at center, #2563E8 0%, transparent 60%)",
-        }}
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 blur-[120px] rounded-full pointer-events-none"
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.2, 0.35, 0.2],
+          opacity: [0.5, 0.8, 0.5],
+          scale: [1, 1.1, 1],
         }}
-        transition={{ duration: 8, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+        transition={{ duration: 10, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
       />
 
-      <div className="relative z-10 flex flex-col items-center text-center max-w-4xl h-full py-12">
-        {/* Top section: Logo and Title */}
-        <div className="flex-1 flex flex-col items-center justify-center">
+      <div className="relative z-10 w-full max-w-7xl grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-8 lg:gap-16 items-center flex-grow">
+        
+        {/* === LEFT COLUMN: Content & QR === */}
+        <div className="flex flex-col items-start text-left space-y-8">
           {showLogo && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
-              className="mb-8"
             >
-              <Image src="/logo.svg" alt="Logo" width={80} height={97} className="h-20 w-auto mx-auto" />
+              <Image src="/logo.svg" alt="Logo" width={60} height={72} className="h-16 w-auto" />
             </motion.div>
           )}
 
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.8 }}
-            className="text-5xl md:text-6xl font-bold tracking-tight mb-4"
-          >
-            {title}
-          </motion.h2>
+          <div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="text-4xl lg:text-5xl font-bold tracking-tight mb-4 leading-tight"
+            >
+              {title}
+            </motion.h2>
 
-          {subtitle && (
-            <motion.p
+            {subtitle && (
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-xl text-muted-foreground max-w-lg"
+              >
+                {subtitle}
+              </motion.p>
+            )}
+          </div>
+
+          {/* Links List */}
+          {links && links.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex flex-col gap-3"
+            >
+              <h3 className="text-sm font-semibold text-primary uppercase tracking-wider">Полезные ссылки</h3>
+              <div className="flex flex-wrap gap-4">
+                {links.map((link, index) => (
+                  <a
+                    key={index}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2 text-lg font-medium hover:text-primary transition-colors"
+                  >
+                    <span className="border-b border-transparent group-hover:border-primary/50 transition-colors">
+                      {link.label}
+                    </span>
+                    <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  </a>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* QR Codes */}
+          {qrCodes && qrCodes.length > 0 && (
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
-              className="text-xl text-muted-foreground"
+              className="pt-4"
             >
-              {subtitle}
-            </motion.p>
+              <div className="flex flex-wrap gap-8">
+                {qrCodes.map((qr, index) => (
+                  <div key={index} className="flex flex-col items-start gap-3">
+                    <div className="bg-white p-3 rounded-2xl shadow-lg border border-border/50">
+                      <QRCodeImage data={qr.url} size={140} />
+                    </div>
+                    <span className="text-sm font-medium text-muted-foreground pl-1">{qr.label}</span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           )}
         </div>
 
-        {qrCodes && qrCodes.length > 0 && (
+        {/* === CENTER: Divider === */}
+        <div className="hidden lg:flex justify-center h-full min-h-[400px]">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            className="flex items-center gap-8 mb-8"
-          >
-            {qrCodes.map((qr, index) => (
-              <div key={index} className="flex flex-col items-center gap-2">
-                <div className="bg-white p-3 rounded-xl shadow-lg">
-                  {qr.qrCode ? (
-                    <Image
-                      src={qr.qrCode || "/placeholder.svg"}
-                      alt={qr.label}
-                      width={80}
-                      height={80}
-                      className="rounded-lg"
-                    />
-                  ) : (
-                    <div className="w-20 h-20 bg-linear-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                      <div className="grid grid-cols-5 gap-0.5">
-                        {Array.from({ length: 25 }).map((_, i) => (
-                          <div
-                            key={i}
-                            className={`w-1.5 h-1.5 rounded-sm ${Math.random() > 0.5 ? "bg-gray-800" : "bg-transparent"}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <span className="text-xs text-muted-foreground">{qr.label}</span>
-              </div>
-            ))}
-          </motion.div>
-        )}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "100%", opacity: 1 }}
+            transition={{ delay: 0.4, duration: 1 }}
+            className="w-[1px] bg-gradient-to-b from-transparent via-primary/40 to-transparent"
+          />
+        </div>
 
+        {/* === RIGHT COLUMN: Author === */}
         {author && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7 }}
-            className="flex items-center gap-4 mb-8"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.6 }}
+            className="flex flex-col items-center text-center lg:items-center justify-center h-full"
           >
-            <div className="w-14 h-14 rounded-full bg-linear-to-br from-primary/20 to-primary/5 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
-              {author.avatar ? (
-                <Image
-                  src={author.avatar || "/placeholder.svg"}
-                  alt={author.name}
-                  width={56}
-                  height={56}
-                  className="object-cover"
-                />
-              ) : (
-                <span className="text-primary/50 text-lg font-semibold">
-                  {author.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </span>
-              )}
+            <span className="text-primary/60 font-semibold tracking-[0.2em] uppercase text-sm mb-8">
+              Автор проекта
+            </span>
+
+            {/* Big Avatar with Glow */}
+            <div className="relative mb-8 group">
+              <motion.div
+                className="absolute inset-0 bg-primary/20 blur-2xl rounded-full"
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.3, 0.6, 0.3],
+                }}
+                transition={{ duration: 4, repeat: Number.POSITIVE_INFINITY }}
+              />
+              <div className="relative w-48 h-48 lg:w-56 lg:h-56 rounded-full border-4 border-white/10 shadow-2xl overflow-hidden bg-muted">
+                {author.avatar ? (
+                  <Image
+                    src={author.avatar || "/placeholder.svg"}
+                    alt={author.name}
+                    fill
+                    className="object-cover transition-transform duration-700"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 text-6xl font-bold text-gray-700">
+                    {author.name.charAt(0)}
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="text-left">
-              <div className="font-semibold">{author.name}</div>
-              <div className="text-sm text-muted-foreground">{author.email}</div>
+
+            <h3 className="text-3xl lg:text-4xl font-bold mb-2">{author.name}</h3>
+            
+            {author.role && (
+              <p className="text-lg text-primary mb-4">{author.role}</p>
+            )}
+
+            <div className="flex items-center gap-2 text-muted-foreground bg-muted/50 px-4 py-2 rounded-full">
+              <Mail className="w-4 h-4" />
+              <span className="text-lg">{author.email}</span>
             </div>
           </motion.div>
         )}
-
-        {/* Bottom section: Buttons */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="flex flex-col items-center gap-4"
-        >
-          {ctaText && (
-            <button className="inline-flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground rounded-full text-lg font-semibold hover:shadow-[0_0_40px_rgba(37,99,232,0.4)] transition-shadow">
-              {ctaText}
-              <ArrowRight className="w-5 h-5" />
-            </button>
-          )}
-
-          {links && links.length > 0 && (
-            <div className="flex flex-wrap justify-center gap-4">
-              {links.map((link, index) => (
-                <a
-                  key={index}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 border border-border rounded-full text-sm hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                >
-                  {link.label}
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-              ))}
-            </div>
-          )}
-        </motion.div>
       </div>
+
+      {/* === FOOTER TEXT === */}
+      {footerText && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 1 }}
+          className="absolute bottom-6 left-0 right-0 text-center px-8 z-20"
+        >
+          <p className="text-sm text-muted-foreground/40 font-medium tracking-widest uppercase">
+            {footerText}
+          </p>
+        </motion.div>
+      )}
     </div>
   )
 }

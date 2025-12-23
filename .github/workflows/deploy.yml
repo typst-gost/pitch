@@ -42,4 +42,5 @@ jobs:
             docker stop typst-pitch || true
             docker rm typst-pitch || true
             docker run -d --restart always --name typst-pitch -p 3001:3000 \
+              -e TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }} \
               f0rgenet/typst-pitch:${{ github.sha }}

@@ -11,7 +11,7 @@ interface QuoteSlideProps {
 
 export function QuoteSlide({ quote, author, role }: QuoteSlideProps) {
   return (
-    <div className="relative w-full h-full flex flex-col items-center justify-center px-16 lg:px-32">
+    <div className="relative w-full h-full flex flex-col items-center justify-center px-16 lg:px-24">
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
