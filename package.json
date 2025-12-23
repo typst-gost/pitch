@@ -11,11 +11,6 @@
   "dependencies": {
     "@myriaddreamin/typst-ts-node-compiler": "^0.7.0-rc1",
     "@myriaddreamin/typst.ts": "^0.7.0-rc1",
-    "codemirror": "^6.0.2",
-    "codemirror-shiki": "^0.3.0",
-    "codemirror-wrapped-line-indent": "^1.0.9",
-    "@emotion/is-prop-valid": "latest",
-    "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
