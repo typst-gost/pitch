@@ -518,26 +518,6 @@ export default function PresentationPage() {
     },
 
     // ============================================
-    // SECTION: Website (Gallery with QR)
-    // ============================================
-    <GallerySlide
-      key="website-gallery"
-      title="Сайт проекта"
-      subtitle="typst-gost.ru"
-      images={[
-        { src: "/documentation-website-dark-theme-modern-landing.jpg", alt: "Landing page", title: "Главная страница", size: "large" },
-        { src: "/documentation-page-code-examples-syntax.jpg", alt: "Documentation", title: "Документация", size: "medium" },
-        { src: "/code-examples-syntax-highlighting-dark.jpg", alt: "Examples", title: "Примеры", size: "small" },
-        { src: "/blog-articles-tech-writing-markdown.jpg", alt: "Blog", title: "Блог", size: "medium" },
-        { src: "/faq-help-support-page-minimal.jpg", alt: "FAQ", title: "FAQ", size: "small" },
-      ]}
-      link="https://typst-gost.ru"
-      linkLabel="typst-gost.ru"
-      qrLabel="Отсканируйте"
-      autoAdvance={true}
-    />,
-
-    // ============================================
     // SECTION: Community (QR focused)
     // ============================================
     <QRLinkSlide
