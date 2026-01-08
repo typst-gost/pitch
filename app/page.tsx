@@ -584,7 +584,7 @@ export default function PresentationPage() {
         avatar: "/avatar.png",
         email: "forgenet@inbox.ru",
       }}
-      qrCodes={[{ label: "Сайт", url: "https://typst-gost.ru" }, { label: "Telegram", url: "https://t.me/typst_gost" }, { label: "Автор", url: "https://t.me/ne4genet" }]}
+      qrCodes={[{ label: "Сайт", url: "https://typst-gost.ru" }, { label: "Telegram", url: "https://t.me/typst_gost" }, { label: "Автор", url: "https://t.me/forgenet" }]}
       footerText="Презентация доступна по ссылке pitch.typst-gost.ru"
     />,
   ]
