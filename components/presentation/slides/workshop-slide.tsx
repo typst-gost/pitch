@@ -9,8 +9,9 @@ import { TypstPreview } from "@/components/typst/preview"
 interface WorkshopSlideProps {
   title?: string
   subtitle?: string
-  initialCode?: string
-  steps?: TypewriterStep[]
+  initialCode?: string | Record<string, string>
+  pages?: string[]
+  steps?: TypewriterStep[] | Record<string, TypewriterStep[]>
   typeSpeed?: number
   deleteSpeed?: number
   humanize?: boolean
@@ -26,6 +27,7 @@ export function WorkshopSlide({
   title,
   subtitle,
   initialCode = "",
+  pages,
   steps = [],
   typeSpeed = 40,
   deleteSpeed = 25,
@@ -36,52 +38,80 @@ export function WorkshopSlide({
   largePreview = false,
   assets = [],
 }: WorkshopSlideProps) {
-  const [userCode, setUserCode] = useState(initialCode)
-  const [isUserEditing, setIsUserEditing] = useState(false)
-
+  // Normalize pages list
+  const fileList = useMemo(() => pages || ["main.typ"], [pages])
+  
   const {
-    text: animatedCode,
+    files: animatedFiles,
+    activeFile: animatedActiveFile,
     currentPrefix,
     currentClosing,
     isTyping,
     start,
+    setActiveFile
   } = useTypewriter({
     initialText: initialCode,
     initialPrefix: hiddenPrefix,
+    pages: fileList,
     steps,
     typeSpeed,
     deleteSpeed,
     autoStart: false,
     onStepComplete: () => {
       if (!isUserEditing) {
-        setUserCode(animatedCode)
+        setUserFiles(animatedFiles)
+        setUserActiveFile(animatedActiveFile)
       }
     }
   })
 
-  useEffect(() => {
-    if (autoStart && steps.length > 0 && !isUserEditing) {
-      const timer = setTimeout(start, 800)
-      return () => clearTimeout(timer)
-    }
-  }, [autoStart, steps.length, start, isUserEditing])
+  // State to hold the current content of all files
+  const [userFiles, setUserFiles] = useState<Record<string, string>>({})
+  const [userActiveFile, setUserActiveFile] = useState(fileList[0])
+  const [isUserEditing, setIsUserEditing] = useState(false)
 
+  // Sync state from typewriter animation
   useEffect(() => {
     if (!isUserEditing) {
-      setUserCode(animatedCode)
+      setUserFiles(animatedFiles)
+      setUserActiveFile(animatedActiveFile)
     }
-  }, [animatedCode, isUserEditing])
+  }, [animatedFiles, animatedActiveFile, isUserEditing])
+
+  // Start animation timer
+  useEffect(() => {
+    if (autoStart && !isUserEditing) {
+      const hasSteps = Array.isArray(steps) ? steps.length > 0 : Object.keys(steps).length > 0
+      if (hasSteps) {
+        const timer = setTimeout(start, 800)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [autoStart, steps, start, isUserEditing])
 
   const handleCodeChange = (newCode: string) => {
     if (readOnly) return
     setIsUserEditing(true)
-    setUserCode(newCode)
+    setUserFiles(prev => ({
+      ...prev,
+      [userActiveFile]: newCode
+    }))
   }
 
+  const handleFileChange = (fileName: string) => {
+    setIsUserEditing(true)
+    setUserActiveFile(fileName)
+    // We update the animation state too so it doesn't jump back if animation resumes/reflows
+    setActiveFile(fileName) 
+  }
+
+  // Calculate the content specifically for the active file preview
+  // This adds the "closing" character from the typewriter effect if needed
   const codeForPreview = useMemo(() => {
-    if (isUserEditing) return userCode
-    return userCode + (currentClosing || "")
-  }, [userCode, currentClosing, isUserEditing])
+    const currentCode = userFiles[userActiveFile] || ""
+    if (isUserEditing) return currentCode
+    return currentCode + (currentClosing || "")
+  }, [userFiles, userActiveFile, currentClosing, isUserEditing])
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-8 lg:p-16">
@@ -115,7 +145,10 @@ export function WorkshopSlide({
           }`}
         >
           <TypstEditor 
-            code={userCode}
+            code={userFiles[userActiveFile] || ""}
+            files={fileList}
+            activeFile={userActiveFile}
+            onFileChange={handleFileChange}
             onChange={handleCodeChange}
             readOnly={!isUserEditing && (isTyping || readOnly)}
             isTyping={isTyping && !isUserEditing}
@@ -134,7 +167,9 @@ export function WorkshopSlide({
           }`}
         >
           <TypstPreview 
-            code={codeForPreview}
+            code={codeForPreview}      // Активный код (с курсором анимации)
+            files={userFiles}          // Все файлы (для контекста/импортов)
+            activeFile={userActiveFile}
             assets={assets}
             hiddenPrefix={isUserEditing ? hiddenPrefix : currentPrefix}
             hiddenSuffix={hiddenSuffix}

@@ -123,7 +123,7 @@ export const subslides = [
       { action: "type", text: "#show: gost.with(\n", closing: ")" },
       // Выбор пресета МАИ
       { action: "type", text: "  title-template: title-templates.mai-university-lab,\n", closing: ")" },
-      
+
       // Блок института
       { action: "type", text: "  institute: (\n", closing: "))" },
       { action: "type", text: "    number: 3,\n", closing: "))" },
@@ -144,10 +144,10 @@ export const subslides = [
       // Тема работы
       { action: "type", text: "  bare-subject: false,\n", closing: ")" },
       { action: "type", text: '  subject: "Пользовательский интерфейс для работы с базой данных",\n', closing: '")' },
-      
+
       // Руководитель
       { action: "type", text: '  manager: (name: "Фамилия И.О.", position: "Преподаватель"),\n', closing: ")" },
-      
+
       { action: "type", text: '  city: "Москва",\n', closing: '")' },
       { action: "type", text: ")" }
     ]}
@@ -180,7 +180,7 @@ export const subslides = [
       { action: "clear" },
 
       { action: "prefix", text: '#import "@preview/modern-g7-32:0.2.0": gost, abstract, appendixes\n\n#set page(fill: white)\n#counter(page).update(2)\n\n' },
-      
+
       // === ПРИМЕР 3: Добавляем части (part) и соисполнителя ===
       { action: "type", text: "#show: gost.with(\n  hide-title: true, // Отключаем титульный лист для демонстрации\n  force-performers: true, // Отключаем перенос на титульный лист\n  performers: (\n" },
       { action: "type", text: "    (\n", closing: ")))" },
@@ -243,19 +243,19 @@ export const subslides = [
       { action: "pause", delay: 500 },
       { action: "type", text: "// Добавим страниц в отчёт\n" },
       { action: "pause", delay: 200 },
-      { action: "prefix", text: contentPrefix + "\n#counter(page).update(12)\n"},
+      { action: "prefix", text: contentPrefix + "\n#counter(page).update(12)\n" },
       { action: "pause", delay: 500 },
       { action: "type", text: "// Добавим таблиц в отчёт\n" },
       { action: "pause", delay: 200 },
-      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n'},
+      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n' },
       { action: "pause", delay: 500 },
       { action: "type", text: "// Добавим изображений в отчёт\n" },
       { action: "pause", delay: 200 },
-      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n#counter("image").update(2)\n'},
+      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n#counter("image").update(2)\n' },
       { action: "pause", delay: 500 },
       { action: "type", text: "// Добавим приложений в отчёт\n" },
       { action: "pause", delay: 200 },
-      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n#counter("image").update(2)\n#counter("appendix").update(2)\n'},
+      { action: "prefix", text: contentPrefix + '\n#counter(page).update(12)\n#counter("table").update(2)\n#counter("image").update(2)\n#counter("appendix").update(2)\n' },
     ]}
     typeSpeed={35}
   />,
@@ -338,7 +338,7 @@ export const subslides = [
     subtitle="Мастерская"
     hiddenPrefix={contentPrefix}
     steps={[
-      { action: "type", text: "*Расчет суммы:\n*" },
+      { action: "type", text: "*Расчет суммы:*\n", closing: "*" },
       { action: "type", text: "$ sum_(k=0)^n k = (n(n+1)) / 2 $ <sum>\n", closing: " $" },
       { action: "pause", delay: 400 },
       { action: "type", text: "Ссылка на уравнение @sum.\n\n", closing: "" },
@@ -364,45 +364,148 @@ export const subslides = [
       { action: "type", text: '      println!("Hello, World!");\n', closing: "```)" },
       { action: "type", text: "    }\n", closing: "  ```)" },
       { action: "type", text: "  ```,\n", closing: ")" },
-      { action: "type", text: "  caption: [Код на Rust]\n", closing: "" },
+      { action: "type", text: "  caption: [Код на Rust]\n", closing: "])" },
       { action: "type", text: ")" },
     ]}
     typeSpeed={35}
   />,
 
   <WorkshopSlide
-    key="workshop-bib"
+    key="workshop-bibliography"
     title="Библиография"
     subtitle="Мастерская"
+    largePreview={true}
     hiddenPrefix={contentPrefix}
-    steps={[
-      { action: "type", text: "#figure(\n", closing: ")" },
-      { action: "type", text: "  ```\n)" },
-      { action: "type", text: "  fn main() {\n", closing: "\n  }\n  ```" },
-      { action: "type", text: '    println!("Hello, World!");\n', closing: "  }\n  ```\n)" },
-      { action: "type", text: "  }\n", closing: "  ```" },
-      { action: "type", text: "  ```,\n", closing: ")" },
-      { action: "type", text: "  caption: [Код на Rust]\n", closing: ")" },
-      { action: "type", text: ")" },
-    ]}
-    typeSpeed={35}
+    typeSpeed={10}
+    pages={["references.bib", "main.typ"]}
+    initialCode={{ "references.bib": "", "main.typ": "" }}
+    steps={{
+      "references.bib": [
+        { action: "speed", speed: 1 },
+        { action: "type", text: "@Book{gost,\n" },
+        {
+          action: "type",
+          text: "    title = {ГОСТ 7.32–2017. Система стандартов по информации, библиотечному и издательскому делу. Отчет о научно-исследовательской работе. Структура и правила оформления},\n",
+        },
+        { action: "type", text: "    author = {{Стандартинформ}},\n" },
+        { action: "type", text: "    year = {2017},\n" },
+        { action: "type", text: "    publisher = {Стандартинформ},\n" },
+        { action: "type", text: "    address = {М},\n" },
+        { action: "type", text: "    pages = {32},\n" },
+        { action: "type", text: "    language = {russian},\n    langid = {russian},\n" },
+        { action: "type", text: "}\n\n" },
+
+        { action: "type", text: "@misc{repo,\n" },
+        { action: "type", text: "    author = {Елисеев П.А.},\n" },
+        { action: "type", text: "    title = {Репозиторий проекта},\n" },
+        { action: "type", text: "    note = {Github репозиторий},\n" },
+        { action: "type", text: "    year = {2024},\n" },
+        { action: "type", text: "    url = {https://github.com/f0rgenet/phone-table},\n" },
+        { action: "type", text: "    media = {eresource},\n" },
+        { action: "type", text: "    language = {russian},\n    langid = {russian},\n" },
+        { action: "type", text: "}\n" },
+        { action: "wait" },
+      ],
+      "main.typ": [
+        { action: "speed", speed: 100 },
+        { action: "type", text: "Проверка ссылки @gost и ещё одной ссылки @repo.\n\n", closing: "" },
+        { action: "pause", delay: 500 },
+        { action: "type", text: '#bibliography("', closing: '")' },
+        { action: "type", text: 'references.bib")' },
+        { action: "pause", delay: 200 },
+        { action: "wait" }
+      ]
+    }}
   />,
+
 
   // 8. ПРИЛОЖЕНИЯ
   <WorkshopSlide
-    key="workshop-appendix"
+    key="workshop-appendixes"
     title="Приложения"
     subtitle="Мастерская"
+    largePreview={true}
+    assets={["nature.jpg", "home.jpg", "abstract.jpg"]}
     hiddenPrefix={contentPrefix}
+    typeSpeed={10}
     steps={[
-      { action: "type", text: "#show: appendixes\n\n" },
-      { action: "type", text: "#appendix-heading(\"справочное\")[Текст приложения]\n" },
-      { action: "type", text: "#lorem(50)\n\n" },
-      { action: "type", text: "Как видно на рисунке @app-img...\n" },
-      { action: "type", text: "#figure(image(\"graph.png\"), caption: \"График\") <app-img>" },
+      // Включаем режим приложений
+      { action: "type", text: "#show: appendixes\n\n", closing: "" },
+      { action: "type", text: "= Приложение с элементами\n", closing: "" },
+
+      // === РИСУНОК 1 ===
+      { action: "type", text: "#figure(\n", closing: ")" },
+      { action: "type", text: '  image("nature.jpg", width: 50%),\n', closing: "))" },
+      { action: "type", text: '  caption: "Пример изображения",\n', closing: ")" },
+      { action: "type", text: ") <example-image>\n\n", closing: "" },
+      { action: "type", text: "Ссылка на рисунок @example-image.\n\n", closing: "" },
+
+      // === РИСУНОК 2 ===
+      { action: "type", text: "#figure(\n", closing: ")" },
+      { action: "type", text: '  image("home.jpg", width: 50%),\n', closing: "))" },
+      { action: "type", text: '  caption: "Пример изображения",\n', closing: '")' },
+      { action: "type", text: ") <another-image>\n\n", closing: "" },
+      { action: "type", text: "Ссылка на рисунок @another-image.\n\n", closing: "" },
+
+      { action: "wait" },
+
+      { action: "put", text: "#show: appendixes\n\n= Приложение с элементами\n" },
+      { action: "type", text: "== Некоторая таблица\n" },
+
+      // === ТАБЛИЦА ===
+      { action: "type", text: "#figure(\n", closing: ")" },
+      { action: "type", text: "  table(\n", closing: "))" },
+      { action: "type", text: "    columns: 4,\n", closing: "))" },
+      // Хедер таблицы
+      { action: "type", text: "    table.header([Заголовок 1], [Заголовок 2], [Заголовок 3], [Заголовок 4]),\n", closing: ")))" },
+      // Тело таблицы
+      { action: "type", text: "    [Элемент 1], [Элемент 2], [Элемент 3], [Элемент 4],\n", closing: "))" },
+      { action: "type", text: "    [Элемент 5], [Элемент 6], [Элемент 7], [Элемент 8],\n", closing: "))" },
+      { action: "type", text: "    [Элемент 9], [Элемент 10], [Элемент 11], [Элемент 12],\n", closing: "))" },
+      { action: "type", text: "  ),\n", closing: ")" },
+      { action: "type", text: '  caption: "Таблица с заголовками",\n', closing: '")' },
+      { action: "type", text: ") <example-table>\n\n", closing: "" },
+      { action: "type", text: "Ссылка на таблицу @example-table.\n\n", closing: "" },
+
+      { action: "type", text: "== Некоторый код\n" },
+
+      // === ЛИСТИНГ КОДА ===
+      { action: "type", text: "#figure(\n", closing: ")" },
+      { action: "type", text: "  ```cpp\n", closing: "```)" }, // Закрываем raw блок и фигуру
+      { action: "type", text: "  #include <iostream>\n\n", closing: "```)" },
+      { action: "type", text: "  int main() {\n", closing: "```" },
+      { action: "type", text: '      std::cout << "Hello, world!" << std::endl;\n', closing: "```)" },
+      { action: "type", text: "      return 0;\n", closing: "```)" },
+      { action: "type", text: "  }\n", closing: "```)" },
+      { action: "type", text: "  ```,\n", closing: ")" },
+      { action: "type", text: "  caption: [Пример кода на C++],\n", closing: '])' },
+      { action: "type", text: ") <example-code>\n\n", closing: "" },
+      { action: "type", text: "Ссылка на листинг @example-code.\n\n", closing: "" },
+      { action: "wait" },
+
+      // === ВЛОЖЕННЫЕ ЗАГОЛОВКИ И СТАТУСЫ ===
+      { action: "put", text: "#show: appendixes\n\n= Заголовок приложений второго уровня\n" },
+      { action: "type", text: "== Некоторое приложение\n\n", closing: "" },
+
+      { action: "type", text: "#figure(\n", closing: ")" },
+      { action: "type", text: '  image("abstract.jpg", width: 50%),\n', closing: "))" },
+      { action: "type", text: '  caption: "Пример изображения",\n', closing: '")' },
+      { action: "type", text: ") <third-image>\n\n", closing: "" },
+      { action: "type", text: "Ссылка на рисунок @third-image.\n\n", closing: "" },
+
+      { action: "type", text: "= Заголовок приложения\n\n", closing: "" },
+      { action: "type", text: "== Очередной заголовок приложения\n\n", closing: "" },
+
+      // Специфичные функции appendix-heading
+      { action: "type", text: "#appendix-heading(\n", closing: ")[]" }, // Добавляем [] для контента
+      { action: "type", text: '  "вспомогательное",\n', closing: ")[]" },
+      { action: "type", text: "  level: 2,\n", closing: ")[]" },
+      { action: "type", text: ")[Приложение с указанием статуса второго уровня]\n\n", closing: "]" },
+
+      { action: "type", text: '#appendix-heading("основное", level: 1)[Приложение с указанием статуса]', closing: "]" },
     ]}
-    typeSpeed={40}
-  />,
+  />
+
 ]
 
 
@@ -613,7 +716,6 @@ export default function PresentationPage() {
             { action: "type", text: "ddddfaeafeaaaaf" },
           ]}
           typeSpeed={50}
-          humanize={true}
         />
       ),
       type: "workshop",

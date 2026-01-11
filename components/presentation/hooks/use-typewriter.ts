@@ -4,18 +4,22 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSlideContext } from "../presentation"
 
 export interface TypewriterStep {
-  action: "type" | "delete" | "replace" | "pause" | "clear" | "wait" | "put" | "prefix"
+  action: "type" | "delete" | "replace" | "pause" | "clear" | "wait" | "put" | "prefix" | "switch" | "speed"
   text?: string
   closing?: string
   position?: number
   length?: number
   delay?: number
+  fileName?: string
+  speed?: number
+  deleteSpeed?: number
 }
 
 export interface TypewriterConfig {
-  initialText?: string
+  initialText?: string | Record<string, string>
   initialPrefix?: string
-  steps: TypewriterStep[]
+  steps: TypewriterStep[] | Record<string, TypewriterStep[]>
+  pages?: string[]
   typeSpeed?: number
   deleteSpeed?: number
   humanize?: boolean
@@ -30,7 +34,8 @@ export function useTypewriter(config: TypewriterConfig) {
   const {
     initialText = "",
     initialPrefix = "",
-    steps: userSteps,
+    steps: inputSteps,
+    pages = ["main.typ"],
     typeSpeed = 50,
     deleteSpeed = 30,
     humanize = true,
@@ -43,11 +48,36 @@ export function useTypewriter(config: TypewriterConfig) {
 
   const { registerStepHandler } = useSlideContext()
 
-  const steps = useMemo(() => {
-    return [{ action: "wait" } as TypewriterStep, ...userSteps]
-  }, [userSteps])
+  // Initialize file contents
+  const initialFiles = useMemo(() => {
+    if (typeof initialText === "string") {
+      return { [pages[0]]: initialText }
+    }
+    return pages.reduce((acc, page) => ({
+      ...acc,
+      [page]: initialText[page] || ""
+    }), {} as Record<string, string>)
+  }, [initialText, pages])
 
-  const [text, setText] = useState(initialText)
+  // Flatten steps into a linear sequence
+  const steps = useMemo(() => {
+    const rawSteps: TypewriterStep[] = [{ action: "wait" }]
+
+    if (Array.isArray(inputSteps)) {
+      rawSteps.push(...inputSteps)
+    } else {
+      pages.forEach((page) => {
+        if (inputSteps[page] && inputSteps[page].length > 0) {
+          rawSteps.push({ action: "switch", fileName: page })
+          rawSteps.push(...inputSteps[page])
+        }
+      })
+    }
+    return rawSteps
+  }, [inputSteps, pages])
+
+  const [files, setFiles] = useState(initialFiles)
+  const [activeFile, setActiveFile] = useState(pages[0])
   const [currentPrefix, setCurrentPrefix] = useState(initialPrefix)
   const [currentClosing, setCurrentClosing] = useState("")
   const [isWaiting, setIsWaiting] = useState(autoStart)
@@ -55,17 +85,31 @@ export function useTypewriter(config: TypewriterConfig) {
   const [stepIndex, setStepIndex] = useState(0)
 
   const charIndexRef = useRef(0)
-  const textRef = useRef(initialText)
+  const filesRef = useRef(initialFiles)
+  const activeFileRef = useRef(pages[0])
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const mountedRef = useRef(false)
-
+  
   const stepsRef = useRef(steps)
-  const configRef = useRef({ typeSpeed, deleteSpeed, humanize, humanizeRange })
+  
+  // Храним базовые настройки (humanize и т.д.)
+  const baseConfigRef = useRef({ humanize, humanizeRange })
+  // Храним текущие скорости (могут меняться шагами "speed")
+  const runtimeSpeedsRef = useRef({ typeSpeed, deleteSpeed })
+  
   const callbacksRef = useRef({ onStepComplete, onComplete })
 
   stepsRef.current = steps
-  configRef.current = { typeSpeed, deleteSpeed, humanize, humanizeRange }
+  baseConfigRef.current = { humanize, humanizeRange }
   callbacksRef.current = { onStepComplete, onComplete }
+  
+  // Обновляем runtimeSpeeds только если animation не идет, 
+  // иначе мы перезапишем динамические изменения из steps при ре-рендере
+  useEffect(() => {
+    if (!isTyping) {
+      runtimeSpeedsRef.current = { typeSpeed, deleteSpeed }
+    }
+  }, [typeSpeed, deleteSpeed, isTyping])
 
   useEffect(() => {
     mountedRef.current = true
@@ -73,7 +117,7 @@ export function useTypewriter(config: TypewriterConfig) {
   }, [])
 
   const getDelay = useCallback((baseDelay: number) => {
-    const { humanize, humanizeRange } = configRef.current
+    const { humanize, humanizeRange } = baseConfigRef.current
     if (!humanize) return baseDelay
     const variation = (Math.random() - 0.5) * 2 * humanizeRange
     const extraPause = Math.random() < 0.1 ? Math.random() * 150 : 0
@@ -98,6 +142,16 @@ export function useTypewriter(config: TypewriterConfig) {
     registerStepHandler(null)
   }, [isWaiting, next, registerStepHandler])
 
+  const updateFileContent = (fileName: string, content: string) => {
+    filesRef.current = { ...filesRef.current, [fileName]: content }
+    setFiles(filesRef.current)
+  }
+
+  // Вспомогательная функция сброса скоростей к начальным значениям пропсов
+  const resetSpeeds = () => {
+    runtimeSpeedsRef.current = { typeSpeed, deleteSpeed }
+  }
+
   useEffect(() => {
     if (!isTyping || isWaiting) return
 
@@ -107,10 +161,13 @@ export function useTypewriter(config: TypewriterConfig) {
       if (loop && currentSteps.length > 0) {
         setStepIndex(0)
         charIndexRef.current = 0
-        textRef.current = initialText
-        setText(initialText)
+        filesRef.current = initialFiles
+        activeFileRef.current = pages[0]
+        setFiles(initialFiles)
+        setActiveFile(pages[0])
         setCurrentPrefix(initialPrefix)
         setCurrentClosing("")
+        resetSpeeds() // Сбрасываем скорость при цикле
       } else {
         setIsTyping(false)
         setCurrentClosing("")
@@ -135,7 +192,10 @@ export function useTypewriter(config: TypewriterConfig) {
     const tick = () => {
       if (!mountedRef.current) return
 
-      const { typeSpeed, deleteSpeed } = configRef.current
+      // Используем динамические скорости
+      const { typeSpeed: currentTypeSpeed, deleteSpeed: currentDeleteSpeed } = runtimeSpeedsRef.current
+      const currentFileName = activeFileRef.current
+      const currentText = filesRef.current[currentFileName] || ""
 
       switch (step.action) {
         case "wait":
@@ -143,14 +203,28 @@ export function useTypewriter(config: TypewriterConfig) {
           setIsTyping(false)
           break
 
+        case "switch":
+           if (step.fileName) {
+             activeFileRef.current = step.fileName
+             setActiveFile(step.fileName)
+           }
+           timeoutRef.current = setTimeout(completeCurrentStep, 300)
+           break
+
+        case "speed":
+           if (step.speed !== undefined) runtimeSpeedsRef.current.typeSpeed = step.speed
+           if (step.deleteSpeed !== undefined) runtimeSpeedsRef.current.deleteSpeed = step.deleteSpeed
+           completeCurrentStep()
+           break
+
         case "type":
           const textToType = step.text || ""
           if (charIndexRef.current < textToType.length) {
             const char = textToType[charIndexRef.current]
-            textRef.current += char
-            setText(textRef.current)
+            const newText = currentText + char
+            updateFileContent(currentFileName, newText)
             charIndexRef.current++
-            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? typeSpeed))
+            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? currentTypeSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
@@ -159,10 +233,10 @@ export function useTypewriter(config: TypewriterConfig) {
         case "delete":
           const countToDelete = step.length ?? 1
           if (charIndexRef.current < countToDelete) {
-            textRef.current = textRef.current.slice(0, -1)
-            setText(textRef.current)
+            const newText = currentText.slice(0, -1)
+            updateFileContent(currentFileName, newText)
             charIndexRef.current++
-            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? deleteSpeed))
+            timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? currentDeleteSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
@@ -173,13 +247,11 @@ export function useTypewriter(config: TypewriterConfig) {
             const pos = step.position ?? 0
             const len = step.length ?? 0
             const replacement = step.text ?? ""
-            const before = textRef.current.slice(0, pos)
-            const after = textRef.current.slice(pos + len)
-            
-            textRef.current = before + replacement + after
-            setText(textRef.current)
+            const before = currentText.slice(0, pos)
+            const after = currentText.slice(pos + len)
+            updateFileContent(currentFileName, before + replacement + after)
             completeCurrentStep()
-          }, getDelay(step.delay ?? typeSpeed))
+          }, getDelay(step.delay ?? currentTypeSpeed))
           break
 
         case "pause":
@@ -188,16 +260,14 @@ export function useTypewriter(config: TypewriterConfig) {
 
         case "clear":
           timeoutRef.current = setTimeout(() => {
-            textRef.current = ""
-            setText("")
+            updateFileContent(currentFileName, "")
             completeCurrentStep()
           }, 100)
           break
         
         case "put":
           timeoutRef.current = setTimeout(() => {
-            textRef.current = step.text ?? ""
-            setText(step.text ?? "")
+            updateFileContent(currentFileName, step.text ?? "")
             completeCurrentStep()
           }, 100)
           break
@@ -214,18 +284,21 @@ export function useTypewriter(config: TypewriterConfig) {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  }, [stepIndex, isTyping, isWaiting, loop, initialText, initialPrefix, getDelay])
+  }, [stepIndex, isTyping, isWaiting, loop, initialFiles, initialPrefix, pages, getDelay])
 
   const start = useCallback(() => {
     setIsWaiting(true)
     setIsTyping(false)
     setStepIndex(0)
     charIndexRef.current = 0
-    textRef.current = initialText
-    setText(initialText)
+    filesRef.current = initialFiles
+    activeFileRef.current = pages[0]
+    setFiles(initialFiles)
+    setActiveFile(pages[0])
     setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
-  }, [initialText, initialPrefix])
+    resetSpeeds()
+  }, [initialFiles, initialPrefix, pages, typeSpeed, deleteSpeed])
 
   const reset = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -233,11 +306,27 @@ export function useTypewriter(config: TypewriterConfig) {
     setIsWaiting(false)
     setStepIndex(0)
     charIndexRef.current = 0
-    textRef.current = initialText
-    setText(initialText)
+    filesRef.current = initialFiles
+    activeFileRef.current = pages[0]
+    setFiles(initialFiles)
+    setActiveFile(pages[0])
     setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
-  }, [initialText, initialPrefix])
+    resetSpeeds()
+  }, [initialFiles, initialPrefix, pages, typeSpeed, deleteSpeed])
 
-  return { text, currentPrefix, currentClosing, isTyping, isWaiting, stepIndex, start, reset, next, setText }
+  return { 
+    files, 
+    activeFile, 
+    currentPrefix, 
+    currentClosing, 
+    isTyping, 
+    isWaiting, 
+    stepIndex, 
+    start, 
+    reset, 
+    next, 
+    setFiles, 
+    setActiveFile 
+  }
 }
