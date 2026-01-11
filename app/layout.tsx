@@ -11,8 +11,8 @@ const siteUrl = "https://pitch.typst-gost.ru";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Презентация Typst ГОСТ",
-  description: "Информация о проекте typst-gost и о шаблоне modern-g7-32",
+  title: "Typst 7.32 — Презентация",
+  description: "Информация о проекте Typst Gost и шаблоне modern-g7-32",
   openGraph: {
       title: "Презентация Typst ГОСТ",
       description:
@@ -46,6 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ru">
+      <link rel="icon" href="/favicon.ico" />
       <body className={`font-sans antialiased ${_inter.variable} ${_jetbrainsMono.variable}`}>
         {children}
         <Analytics />
