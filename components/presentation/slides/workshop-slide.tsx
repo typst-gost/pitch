@@ -18,6 +18,8 @@ interface WorkshopSlideProps {
   readOnly?: boolean
   hiddenPrefix?: string
   hiddenSuffix?: string
+  largePreview?: boolean
+  assets?: string[]
 }
 
 export function WorkshopSlide({
@@ -31,17 +33,21 @@ export function WorkshopSlide({
   readOnly = false,
   hiddenPrefix = '#import "@preview/modern-g7-32:0.2.0": *\n#show: gost.with(hide-title: true)\n#set page(width: 200pt, height: auto, margin: 20pt, fill: white, footer: none)\n',
   hiddenSuffix,
+  largePreview = false,
+  assets = [],
 }: WorkshopSlideProps) {
   const [userCode, setUserCode] = useState(initialCode)
   const [isUserEditing, setIsUserEditing] = useState(false)
 
   const {
     text: animatedCode,
+    currentPrefix,
     currentClosing,
     isTyping,
     start,
   } = useTypewriter({
     initialText: initialCode,
+    initialPrefix: hiddenPrefix,
     steps,
     typeSpeed,
     deleteSpeed,
@@ -53,7 +59,6 @@ export function WorkshopSlide({
     }
   })
 
-  // Автостарт
   useEffect(() => {
     if (autoStart && steps.length > 0 && !isUserEditing) {
       const timer = setTimeout(start, 800)
@@ -61,7 +66,6 @@ export function WorkshopSlide({
     }
   }, [autoStart, steps.length, start, isUserEditing])
 
-  // Синхронизация кода анимации с локальным состоянием
   useEffect(() => {
     if (!isUserEditing) {
       setUserCode(animatedCode)
@@ -74,7 +78,6 @@ export function WorkshopSlide({
     setUserCode(newCode)
   }
 
-  // Код для компиляции: основной текст + скрытые скобки (если мы не в режиме ручной правки)
   const codeForPreview = useMemo(() => {
     if (isUserEditing) return userCode
     return userCode + (currentClosing || "")
@@ -97,19 +100,26 @@ export function WorkshopSlide({
         </motion.div>
       )}
 
-      <div className="w-full max-w-6xl flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 h-full max-h-[80vh]">
+      <div className={`w-full flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 h-full ${
+        largePreview ? "max-w-7xl max-h-[90vh]" : "max-w-6xl max-h-[80vh]"
+      }`}>
+        
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
-          className="w-full lg:w-1/2 h-80 lg:h-full max-h-125 shrink-0"
+          className={`w-full flex flex-col shrink-0 lg:w-1/2 ${
+            largePreview 
+              ? "h-full max-h-[70vh]"
+              : "h-80 lg:h-full lg:max-h-[60vh]"
+          }`}
         >
-          {/* Редактор показывает чистый код */}
           <TypstEditor 
             code={userCode}
             onChange={handleCodeChange}
             readOnly={!isUserEditing && (isTyping || readOnly)}
             isTyping={isTyping && !isUserEditing}
+            className="h-full"
           />
         </motion.div>
 
@@ -117,13 +127,18 @@ export function WorkshopSlide({
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
-          className="w-full lg:w-1/2 h-80 lg:h-full max-h-125 shrink-0"
+          className={`w-full flex flex-col shrink-0 lg:w-1/2 ${
+            largePreview 
+              ? "h-full max-h-[70vh]" 
+              : "h-80 lg:h-full lg:max-h-[60vh]"
+          }`}
         >
-          {/* Превью рендерит код со скрытыми закрывающими скобками */}
           <TypstPreview 
             code={codeForPreview}
-            hiddenPrefix={hiddenPrefix}
+            assets={assets}
+            hiddenPrefix={isUserEditing ? hiddenPrefix : currentPrefix}
             hiddenSuffix={hiddenSuffix}
+            className="h-full"
           />
         </motion.div>
       </div>
