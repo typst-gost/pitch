@@ -12,12 +12,13 @@ interface TypstRendererOptions {
 }
 
 interface TypstSvgOptions {
-  mainContent: string;
+  mainFilePath: string;
 }
 
 interface TypstModule {
   setCompilerInitOptions(options: TypstCompilerOptions): void;
   setRendererInitOptions(options: TypstRendererOptions): void;
+  mapShadow(path: string, data: Uint8Array): void;
   svg(options: TypstSvgOptions): Promise<string>;
 }
 

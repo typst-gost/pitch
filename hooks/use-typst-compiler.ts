@@ -63,8 +63,12 @@ export function useTypstCompiler() {
       }
 
       try {
+        if (compiler) {
+          compiler.mapShadow("/main.typ", new TextEncoder().encode(code))
+        }
+
         const svg = await compiler.svg({
-          mainContent: code,
+          mainFilePath: "/main.typ",
         })
 
         if (!svg || typeof svg !== "string") {

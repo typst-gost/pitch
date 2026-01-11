@@ -11,6 +11,7 @@ interface TypstEditorProps {
   isTyping?: boolean 
   wordWrap?: boolean
   fileName?: string
+  className?: string
 }
 
 export function TypstEditor({
@@ -19,13 +20,19 @@ export function TypstEditor({
   readOnly = false,
   isTyping = false,
   wordWrap = true,
-  fileName = "main.typ"
+  fileName = "main.typ",
+  className
 }: TypstEditorProps) {
-  const [highlightedCode, setHighlightedCode] = useState("")
+  const [highlightedCode, setHighlightedCode] = useState(() => {
+    return `<pre style="color: #e6edf3; background-color: transparent"><code>${code}</code></pre>`
+  })
+  
   const containerRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
+    let mounted = true
+    
     async function highlight() {
       try {
         const html = await codeToHtml(code, {
@@ -34,6 +41,8 @@ export function TypstEditor({
           defaultColor: false,
         })
         
+        if (!mounted) return
+
         if (readOnly) {
           const cursorHtml = '<span class="typst-cursor"></span>'
           const htmlWithCursor = html.replace('</code>', `${cursorHtml}</code>`)
@@ -42,10 +51,14 @@ export function TypstEditor({
           setHighlightedCode(html)
         }
       } catch (e) {
-        setHighlightedCode(`<pre style="color: #e6edf3"><code>${code}</code></pre>`)
+        if (mounted) {
+           setHighlightedCode(`<pre style="color: #e6edf3"><code>${code}</code></pre>`)
+        }
       }
     }
+    
     highlight()
+    return () => { mounted = false }
   }, [code, readOnly])
 
   const scrollToBottom = useCallback(() => {
@@ -55,18 +68,25 @@ export function TypstEditor({
   }, [])
 
   useEffect(() => {
-    const timer = setTimeout(scrollToBottom, 50)
-    return () => clearTimeout(timer)
-  }, [highlightedCode, scrollToBottom])
+    if (isTyping) {
+      const timer = setTimeout(scrollToBottom, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [highlightedCode, scrollToBottom, isTyping])
 
   const commonStyles: React.CSSProperties = {
     whiteSpace: wordWrap ? 'pre-wrap' : 'pre',
     wordBreak: wordWrap ? 'break-word' : 'normal',
     overflowWrap: wordWrap ? 'anywhere' : 'normal',
+    fontFamily: 'monospace', 
+    lineHeight: '1.5rem',
+    fontSize: '0.875rem', 
+    padding: '1rem',
+    margin: 0,
   }
 
   return (
-    <div className="flex-1 h-full max-h-[60vh] flex flex-col min-w-0 relative">
+    <div className={`flex flex-col min-w-0 relative bg-[#0d1117] rounded-xl border border-border/50 overflow-hidden ${className || ''}`}>
       <style>{`
         @keyframes typst-blink {
           0%, 100% { opacity: 1; }
@@ -81,22 +101,22 @@ export function TypstEditor({
           vertical-align: text-bottom;
           animation: typst-blink 1s step-end infinite;
         }
-        
+        /* Стили для shiki, чтобы убрать дефолтные отступы */
         .shiki-transparent pre, 
         .shiki-transparent code {
           background-color: transparent !important;
           white-space: inherit !important;
           word-break: inherit !important;
           overflow-wrap: inherit !important;
-        }
-        
-        .shiki-transparent pre {
-          margin: 0;
-          padding: 0;
+          margin: 0 !important;
+          padding: 0 !important;
+          font-family: inherit !important;
+          line-height: inherit !important;
+          font-size: inherit !important;
         }
       `}</style>
 
-      <div className="bg-[#0d1117] rounded-t-xl border border-border/50 px-4 py-2 flex items-center gap-2 select-none shrink-0">
+      <div className="bg-[#0d1117] border-b border-border/50 px-4 py-2 flex items-center gap-2 select-none shrink-0">
         <div className="flex gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-500/80" />
           <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
@@ -121,24 +141,35 @@ export function TypstEditor({
 
       <div 
         ref={containerRef}
-        className="flex-1 bg-[#0d1117] rounded-b-xl border-x border-b border-border/50 p-4 overflow-auto relative scrollbar-hide"
+        className="flex-1 bg-[#0d1117] overflow-auto relative scrollbar-hide"
       >
-        <div 
-          className="font-mono text-sm leading-6 shiki-transparent min-h-full"
-          style={commonStyles}
-          dangerouslySetInnerHTML={{ __html: highlightedCode }}
-        />
-
-        {!readOnly && (
-          <textarea
-            ref={textareaRef}
-            value={code}
-            onChange={(e) => onChange?.(e.target.value)}
-            className="absolute inset-0 w-full h-full p-4 bg-transparent text-transparent caret-white font-mono text-sm leading-6 resize-none outline-none z-10"
-            style={commonStyles}
-            spellCheck={false}
+        <div className="grid min-h-full">
+          
+          <div 
+            className="shiki-transparent pointer-events-none select-none"
+            style={{ 
+              ...commonStyles, 
+              gridArea: '1 / 1',
+              zIndex: 0 
+            }}
+            dangerouslySetInnerHTML={{ __html: highlightedCode }}
           />
-        )}
+
+          {!readOnly && (
+            <textarea
+              ref={textareaRef}
+              value={code}
+              onChange={(e) => onChange?.(e.target.value)}
+              className="w-full bg-transparent text-transparent caret-white resize-none outline-none overflow-hidden"
+              style={{ 
+                ...commonStyles, 
+                gridArea: '1 / 1',
+                zIndex: 1 
+              }}
+              spellCheck={false}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
