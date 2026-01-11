@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { useSlideContext } from "../presentation"
 
 export interface TypewriterStep {
-  action: "type" | "delete" | "replace" | "pause" | "clear" | "wait"
+  action: "type" | "delete" | "replace" | "pause" | "clear" | "wait" | "put" | "prefix"
   text?: string
   closing?: string
   position?: number
@@ -14,6 +14,7 @@ export interface TypewriterStep {
 
 export interface TypewriterConfig {
   initialText?: string
+  initialPrefix?: string
   steps: TypewriterStep[]
   typeSpeed?: number
   deleteSpeed?: number
@@ -28,6 +29,7 @@ export interface TypewriterConfig {
 export function useTypewriter(config: TypewriterConfig) {
   const {
     initialText = "",
+    initialPrefix = "",
     steps: userSteps,
     typeSpeed = 50,
     deleteSpeed = 30,
@@ -45,26 +47,22 @@ export function useTypewriter(config: TypewriterConfig) {
     return [{ action: "wait" } as TypewriterStep, ...userSteps]
   }, [userSteps])
 
-  // --- STATE ---
   const [text, setText] = useState(initialText)
+  const [currentPrefix, setCurrentPrefix] = useState(initialPrefix)
   const [currentClosing, setCurrentClosing] = useState("")
   const [isWaiting, setIsWaiting] = useState(autoStart)
   const [isTyping, setIsTyping] = useState(false)
   const [stepIndex, setStepIndex] = useState(0)
 
-  // --- REFS (State of Truth) ---
   const charIndexRef = useRef(0)
   const textRef = useRef(initialText)
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const mountedRef = useRef(false)
 
-  // --- LATEST REFS (Для разрыва зависимости от рендера) ---
-  // Эти рефы позволяют читать актуальные пропсы внутри useEffect без его перезапуска
   const stepsRef = useRef(steps)
   const configRef = useRef({ typeSpeed, deleteSpeed, humanize, humanizeRange })
   const callbacksRef = useRef({ onStepComplete, onComplete })
 
-  // Синхронизируем рефы с пропсами при каждом рендере
   stepsRef.current = steps
   configRef.current = { typeSpeed, deleteSpeed, humanize, humanizeRange }
   callbacksRef.current = { onStepComplete, onComplete }
@@ -74,7 +72,6 @@ export function useTypewriter(config: TypewriterConfig) {
     return () => { mountedRef.current = false }
   }, [])
 
-  // Расчет задержки (читает из Ref, чтобы не зависеть от пропсов)
   const getDelay = useCallback((baseDelay: number) => {
     const { humanize, humanizeRange } = configRef.current
     if (!humanize) return baseDelay
@@ -101,21 +98,18 @@ export function useTypewriter(config: TypewriterConfig) {
     registerStepHandler(null)
   }, [isWaiting, next, registerStepHandler])
 
-  // --- ГЛАВНЫЙ ЦИКЛ ---
-  // Зависит ТОЛЬКО от stepIndex и флагов состояния.
-  // НЕ ЗАВИСИТ от steps, config и прочего, что меняется при рендере.
   useEffect(() => {
     if (!isTyping || isWaiting) return
 
     const currentSteps = stepsRef.current
     
-    // Проверка финиша
     if (stepIndex >= currentSteps.length) {
       if (loop && currentSteps.length > 0) {
         setStepIndex(0)
         charIndexRef.current = 0
         textRef.current = initialText
         setText(initialText)
+        setCurrentPrefix(initialPrefix)
         setCurrentClosing("")
       } else {
         setIsTyping(false)
@@ -199,6 +193,19 @@ export function useTypewriter(config: TypewriterConfig) {
             completeCurrentStep()
           }, 100)
           break
+        
+        case "put":
+          timeoutRef.current = setTimeout(() => {
+            textRef.current = step.text ?? ""
+            setText(step.text ?? "")
+            completeCurrentStep()
+          }, 100)
+          break
+
+        case "prefix":
+          setCurrentPrefix(step.text ?? "")
+          completeCurrentStep()
+          break
       }
     }
 
@@ -207,8 +214,7 @@ export function useTypewriter(config: TypewriterConfig) {
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current)
     }
-  // В зависимостях НЕТ steps, config, getDelay. Только управляющие сигналы.
-  }, [stepIndex, isTyping, isWaiting, loop, initialText, getDelay])
+  }, [stepIndex, isTyping, isWaiting, loop, initialText, initialPrefix, getDelay])
 
   const start = useCallback(() => {
     setIsWaiting(true)
@@ -217,8 +223,9 @@ export function useTypewriter(config: TypewriterConfig) {
     charIndexRef.current = 0
     textRef.current = initialText
     setText(initialText)
+    setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
-  }, [initialText])
+  }, [initialText, initialPrefix])
 
   const reset = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -228,8 +235,9 @@ export function useTypewriter(config: TypewriterConfig) {
     charIndexRef.current = 0
     textRef.current = initialText
     setText(initialText)
+    setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
-  }, [initialText])
+  }, [initialText, initialPrefix])
 
-  return { text, currentClosing, isTyping, isWaiting, stepIndex, start, reset, next, setText }
+  return { text, currentPrefix, currentClosing, isTyping, isWaiting, stepIndex, start, reset, next, setText }
 }
