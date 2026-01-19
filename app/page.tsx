@@ -471,7 +471,7 @@ export const subslides = [
 
       // === ЛИСТИНГ КОДА ===
       { action: "type", text: "#figure(\n", closing: ")" },
-      { action: "type", text: "  ```cpp\n", closing: "```)" }, // Закрываем raw блок и фигуру
+      { action: "type", text: "  ```cpp\n", closing: "```)" },
       { action: "type", text: "  #include <iostream>\n\n", closing: "```)" },
       { action: "type", text: "  int main() {\n", closing: "```" },
       { action: "type", text: '      std::cout << "Hello, world!" << std::endl;\n', closing: "```)" },
@@ -672,7 +672,7 @@ export default function PresentationPage() {
           key="workshop-typst-intro"
           title="Знакомство с Typst"
           subtitle="Мастерская"
-          hiddenPrefix="#set page(width: 200pt, height: auto, margin: 20pt, fill: white, footer: none)"
+          hiddenPrefix={`#import "@preview/soviet-matrix:0.2.1": game\n#set page(fill: white, margin: 20pt, width: 200pt, height: auto)\n\n`}
           steps={[
             { action: "type", text: "= Привет, Typst!\n\n" },
             { action: "pause", delay: 500 },
@@ -689,27 +689,24 @@ export default function PresentationPage() {
             // Пример 1: Площадка Typst (упрощенная версия)
             { action: "type", text: "#set page(paper: \"a5\", height: auto)\n" },
             { action: "type", text: "#set heading(numbering: \"1.\")\n\n" },
-            { action: "type", text: "#show link: set text(fill: blue, weight: 700)\n" },
-            { action: "type", text: "#show link: underline\n\n" },
             { action: "type", text: "= Мастерская Typst\n\n" },
-            { action: "type", text: "Добро пожаловать на площадку Typst! Тут мы будем экспериментировать с Typst. " },
-            { action: "type", text: "Код слева превращается в результат справа! " },
-            { action: "type", text: "Панель предварительного просмотра справа будет обновляться в реальном времени.\n\n" },
-            { action: "type", text: "= Основы <basics>\n\n" },
+            { action: "type", text: "== Основы <basics>\n\n" },
             { action: "type", text: "Typst — это _язык разметки_. " },
             { action: "type", text: "Среди прочего, вы можете использовать его для:\n\n" },
             { action: "type", text: "- *Сильного выделения* текста\n" },
             { action: "type", text: "- Ссылки на @basics\n" },
             { action: "type", text: "- Набора математики: $a, b in { 1/2, sqrt(4 a b) }$\n\n" },
-            { action: "type", text: "Но это только поверхность! " },
-            { action: "type", text: "Typst имеет мощные системы для скриптинга, стилизации, интроспекции и многого другого.\n\n" },
+            { action: "type", text: "== Правила форматирования\n"},
+            { action: "type", text: "#show link: set text(fill: blue, weight: 700)\n" },
+            { action: "type", text: "#show link: underline\n\n" },
+            { action: "type", text: "https://typst-gost.ru"},
 
             // Переход ко второму примеру
             { action: "wait" },
             { action: "clear" },
 
             // Пример 2: Игра Soviet Matrix
-            { action: "type", text: "#import \"@preview/soviet-matrix:0.2.1\": game\n" },
+            
             { action: "type", text: "#show: game.with(seed: 123)\n\n" },
             { action: "type", text: "aaeadeffdddfdddeaeafaaafaadfaaeddeddeddfdddfdedddddfaaef\n" },
             { action: "type", text: "aeedededddfsaceeedfceafeaaafeefdddfddddfdddfaaaddddafadd\n" },
