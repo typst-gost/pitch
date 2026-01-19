@@ -11,7 +11,7 @@ interface SlideNavigationProps {
   onGoTo: (index: number) => void
   showOverview: boolean
   onToggleOverview: () => void
-  visible: boolean // Added visibility control
+  visible: boolean
 }
 
 export function SlideNavigation({

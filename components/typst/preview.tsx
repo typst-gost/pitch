@@ -42,7 +42,7 @@ export function TypstPreview({
         if (!response.ok) throw new Error(`Asset ${assetName} not found`)
         
         const buffer = await response.arrayBuffer()
-        compiler.mapShadow(`${assetName}`, new Uint8Array(buffer))
+        compiler.mapShadow(`/${assetName}`, new Uint8Array(buffer))
       }))
     } catch (error) {
       console.error("Failed to load Typst assets:", error)
@@ -56,22 +56,23 @@ export function TypstPreview({
 
     Object.entries(files).forEach(([filename, content]) => {
       if (filename !== activeFile) {
-        compiler.mapShadow(`${filename}`, encoder.encode(content))
+        compiler.mapShadow(`/${filename}`, encoder.encode(content))
       }
     })
-    
-    compiler.mapShadow(`${activeFile}`, encoder.encode(code))
+
+    compiler.mapShadow(`/${activeFile}`, encoder.encode(code))
+
   }, [compiler, files, code, activeFile])
 
   const handleCompile = useCallback(async () => {
     if (!compile || !compiler) return
 
+    syncFiles()
+    
     if (!isReady && assets.length > 0) {
       await loadAssets()
       setIsReady(true)
     }
-
-    syncFiles()
 
     try {
       let sourceToCompile = ""
@@ -79,9 +80,14 @@ export function TypstPreview({
       if (isTypst) {
         sourceToCompile = `${hiddenPrefix}\n${code}\n${hiddenSuffix}`
       } else {
-        sourceToCompile = `${hiddenPrefix}\n#set page(margin: (x: 20pt, y: 20pt))\n#raw(read("${activeFile}"), lang: "${fileExt}", block: true)\n${hiddenSuffix}`
+        sourceToCompile = `
+          ${hiddenPrefix}
+          #set page(margin: (x: 20pt, y: 20pt)) // Опционально: сброс полей для кода, если нужно
+          #raw(read("/${activeFile}"), lang: "${fileExt}", block: true)
+          ${hiddenSuffix}
+        `
       }
-
+      
       const svg = await compile(sourceToCompile)
 
       if (svg && typeof svg === 'string' && svg.trim().startsWith('<svg')) {

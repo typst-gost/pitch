@@ -13,7 +13,6 @@ interface SlideWrapperProps {
 const getVariants = (transitionType: string) => {
   switch (transitionType) {
     case "zoom-in":
-      // Flying into a subslide
       return {
         enter: {
           scale: 2.5,
@@ -32,7 +31,6 @@ const getVariants = (transitionType: string) => {
         },
       }
     case "zoom-out":
-      // Flying out of a subslide
       return {
         enter: {
           scale: 0.5,

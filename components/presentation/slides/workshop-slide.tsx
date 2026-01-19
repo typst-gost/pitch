@@ -49,7 +49,8 @@ export function WorkshopSlide({
     isTyping,
     isWaiting,
     start,
-    setActiveFile
+    setActiveFile,
+    jumpToFile // Используем новую функцию
   } = useTypewriter({
     initialText: initialCode,
     initialPrefix: hiddenPrefix,
@@ -70,6 +71,7 @@ export function WorkshopSlide({
   const [userActiveFile, setUserActiveFile] = useState(fileList[0])
   const [isUserEditing, setIsUserEditing] = useState(false)
 
+  // Sync user state with animation state when not editing manually
   useEffect(() => {
     if (!isUserEditing) {
       setUserFiles(animatedFiles)
@@ -94,9 +96,15 @@ export function WorkshopSlide({
   }
 
   const handleFileChange = (fileName: string) => {
-    setIsUserEditing(true)
-    setUserActiveFile(fileName)
-    setActiveFile(fileName) 
+    if (isUserEditing) {
+        // Если пользователь уже редактирует сам, просто меняем файл
+        setUserActiveFile(fileName)
+    } else {
+        // Если мы в режиме презентации, пытаемся прыгнуть к скрипту этого файла
+        jumpToFile(fileName)
+        // Но визуально переключаем сразу, чтобы не было задержки
+        setUserActiveFile(fileName) 
+    }
   }
 
   const codeForPreview = useMemo(() => {
