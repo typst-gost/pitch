@@ -48,7 +48,6 @@ export function useTypewriter(config: TypewriterConfig) {
 
   const { registerStepHandler } = useSlideContext()
 
-  // Initialize file contents
   const initialFiles = useMemo(() => {
     if (typeof initialText === "string") {
       return { [pages[0]]: initialText }
@@ -59,10 +58,8 @@ export function useTypewriter(config: TypewriterConfig) {
     }), {} as Record<string, string>)
   }, [initialText, pages])
 
-  // Flatten steps into a linear sequence
   const steps = useMemo(() => {
     const rawSteps: TypewriterStep[] = [{ action: "wait" }]
-
     if (Array.isArray(inputSteps)) {
       rawSteps.push(...inputSteps)
     } else {
@@ -89,22 +86,15 @@ export function useTypewriter(config: TypewriterConfig) {
   const activeFileRef = useRef(pages[0])
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
   const mountedRef = useRef(false)
-  
   const stepsRef = useRef(steps)
-  
-  // Храним базовые настройки (humanize и т.д.)
   const baseConfigRef = useRef({ humanize, humanizeRange })
-  // Храним текущие скорости (могут меняться шагами "speed")
   const runtimeSpeedsRef = useRef({ typeSpeed, deleteSpeed })
-  
   const callbacksRef = useRef({ onStepComplete, onComplete })
 
   stepsRef.current = steps
   baseConfigRef.current = { humanize, humanizeRange }
   callbacksRef.current = { onStepComplete, onComplete }
-  
-  // Обновляем runtimeSpeeds только если animation не идет, 
-  // иначе мы перезапишем динамические изменения из steps при ре-рендере
+
   useEffect(() => {
     if (!isTyping) {
       runtimeSpeedsRef.current = { typeSpeed, deleteSpeed }
@@ -124,12 +114,66 @@ export function useTypewriter(config: TypewriterConfig) {
     return Math.max(10, baseDelay + variation + extraPause)
   }, [])
 
+  const updateFileContent = useCallback((fileName: string, content: string) => {
+    filesRef.current = { ...filesRef.current, [fileName]: content }
+    setFiles({ ...filesRef.current })
+  }, [])
+
+  const resetSpeeds = useCallback(() => {
+    runtimeSpeedsRef.current = { typeSpeed, deleteSpeed }
+  }, [typeSpeed, deleteSpeed])
+
+  const skipAll = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    
+    let currentFiles = { ...initialFiles }
+    let currentActive = pages[0]
+    let currentPref = initialPrefix
+
+    stepsRef.current.forEach((step) => {
+      switch (step.action) {
+        case "switch": if (step.fileName) currentActive = step.fileName; break
+        case "type":
+        case "put":
+          const content = step.action === "type" ? (currentFiles[currentActive] || "") + (step.text || "") : (step.text || "")
+          currentFiles[currentActive] = content
+          break
+        case "delete":
+          currentFiles[currentActive] = (currentFiles[currentActive] || "").slice(0, -(step.length ?? 1))
+          break
+        case "replace":
+          const pos = step.position ?? 0
+          const len = step.length ?? 0
+          const replacement = step.text ?? ""
+          const text = currentFiles[currentActive] || ""
+          currentFiles[currentActive] = text.slice(0, pos) + replacement + text.slice(pos + len)
+          break
+        case "clear": currentFiles[currentActive] = ""; break
+        case "prefix": currentPref = step.text ?? ""; break
+      }
+    })
+
+    filesRef.current = currentFiles
+    setFiles(currentFiles)
+    setActiveFile(currentActive)
+    activeFileRef.current = currentActive
+    setCurrentPrefix(currentPref)
+    setStepIndex(stepsRef.current.length)
+    setIsTyping(false)
+    setIsWaiting(false)
+    setCurrentClosing("")
+  }, [initialFiles, initialPrefix, pages])
+
   const next = useCallback(() => {
+    if (isTyping) {
+      skipAll()
+      return
+    }
     setIsWaiting(false)
     setIsTyping(true)
     charIndexRef.current = 0
     setStepIndex((prev) => prev + 1)
-  }, [])
+  }, [isTyping, skipAll])
 
   useEffect(() => {
     if (isWaiting) {
@@ -142,21 +186,10 @@ export function useTypewriter(config: TypewriterConfig) {
     registerStepHandler(null)
   }, [isWaiting, next, registerStepHandler])
 
-  const updateFileContent = (fileName: string, content: string) => {
-    filesRef.current = { ...filesRef.current, [fileName]: content }
-    setFiles(filesRef.current)
-  }
-
-  // Вспомогательная функция сброса скоростей к начальным значениям пропсов
-  const resetSpeeds = () => {
-    runtimeSpeedsRef.current = { typeSpeed, deleteSpeed }
-  }
-
   useEffect(() => {
     if (!isTyping || isWaiting) return
 
     const currentSteps = stepsRef.current
-    
     if (stepIndex >= currentSteps.length) {
       if (loop && currentSteps.length > 0) {
         setStepIndex(0)
@@ -167,7 +200,7 @@ export function useTypewriter(config: TypewriterConfig) {
         setActiveFile(pages[0])
         setCurrentPrefix(initialPrefix)
         setCurrentClosing("")
-        resetSpeeds() // Сбрасываем скорость при цикле
+        resetSpeeds()
       } else {
         setIsTyping(false)
         setCurrentClosing("")
@@ -177,7 +210,6 @@ export function useTypewriter(config: TypewriterConfig) {
     }
 
     const step = currentSteps[stepIndex]
-
     if (charIndexRef.current === 0 && step.closing !== undefined) {
       setCurrentClosing(step.closing)
     }
@@ -191,8 +223,6 @@ export function useTypewriter(config: TypewriterConfig) {
 
     const tick = () => {
       if (!mountedRef.current) return
-
-      // Используем динамические скорости
       const { typeSpeed: currentTypeSpeed, deleteSpeed: currentDeleteSpeed } = runtimeSpeedsRef.current
       const currentFileName = activeFileRef.current
       const currentText = filesRef.current[currentFileName] || ""
@@ -202,7 +232,6 @@ export function useTypewriter(config: TypewriterConfig) {
           setIsWaiting(true)
           setIsTyping(false)
           break
-
         case "switch":
            if (step.fileName) {
              activeFileRef.current = step.fileName
@@ -210,68 +239,56 @@ export function useTypewriter(config: TypewriterConfig) {
            }
            timeoutRef.current = setTimeout(completeCurrentStep, 300)
            break
-
         case "speed":
            if (step.speed !== undefined) runtimeSpeedsRef.current.typeSpeed = step.speed
            if (step.deleteSpeed !== undefined) runtimeSpeedsRef.current.deleteSpeed = step.deleteSpeed
            completeCurrentStep()
            break
-
         case "type":
           const textToType = step.text || ""
           if (charIndexRef.current < textToType.length) {
             const char = textToType[charIndexRef.current]
-            const newText = currentText + char
-            updateFileContent(currentFileName, newText)
+            updateFileContent(currentFileName, currentText + char)
             charIndexRef.current++
             timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? currentTypeSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
           break
-
         case "delete":
           const countToDelete = step.length ?? 1
           if (charIndexRef.current < countToDelete) {
-            const newText = currentText.slice(0, -1)
-            updateFileContent(currentFileName, newText)
+            updateFileContent(currentFileName, currentText.slice(0, -1))
             charIndexRef.current++
             timeoutRef.current = setTimeout(tick, getDelay(step.delay ?? currentDeleteSpeed))
           } else {
             timeoutRef.current = setTimeout(completeCurrentStep, 100)
           }
           break
-
         case "replace":
           timeoutRef.current = setTimeout(() => {
             const pos = step.position ?? 0
             const len = step.length ?? 0
             const replacement = step.text ?? ""
-            const before = currentText.slice(0, pos)
-            const after = currentText.slice(pos + len)
-            updateFileContent(currentFileName, before + replacement + after)
+            updateFileContent(currentFileName, currentText.slice(0, pos) + replacement + currentText.slice(pos + len))
             completeCurrentStep()
           }, getDelay(step.delay ?? currentTypeSpeed))
           break
-
         case "pause":
           timeoutRef.current = setTimeout(completeCurrentStep, step.delay ?? 1000)
           break
-
         case "clear":
           timeoutRef.current = setTimeout(() => {
             updateFileContent(currentFileName, "")
             completeCurrentStep()
           }, 100)
           break
-        
         case "put":
           timeoutRef.current = setTimeout(() => {
             updateFileContent(currentFileName, step.text ?? "")
             completeCurrentStep()
           }, 100)
           break
-
         case "prefix":
           setCurrentPrefix(step.text ?? "")
           completeCurrentStep()
@@ -280,11 +297,8 @@ export function useTypewriter(config: TypewriterConfig) {
     }
 
     tick()
-
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [stepIndex, isTyping, isWaiting, loop, initialFiles, initialPrefix, pages, getDelay])
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current) }
+  }, [stepIndex, isTyping, isWaiting, loop, initialFiles, initialPrefix, pages, getDelay, updateFileContent, resetSpeeds])
 
   const start = useCallback(() => {
     setIsWaiting(true)
@@ -298,7 +312,7 @@ export function useTypewriter(config: TypewriterConfig) {
     setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
     resetSpeeds()
-  }, [initialFiles, initialPrefix, pages, typeSpeed, deleteSpeed])
+  }, [initialFiles, initialPrefix, pages, resetSpeeds])
 
   const reset = useCallback(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -313,7 +327,7 @@ export function useTypewriter(config: TypewriterConfig) {
     setCurrentPrefix(initialPrefix)
     setCurrentClosing("")
     resetSpeeds()
-  }, [initialFiles, initialPrefix, pages, typeSpeed, deleteSpeed])
+  }, [initialFiles, initialPrefix, pages, resetSpeeds])
 
   return { 
     files, 
@@ -326,6 +340,7 @@ export function useTypewriter(config: TypewriterConfig) {
     start, 
     reset, 
     next, 
+    skipAll,
     setFiles, 
     setActiveFile 
   }

@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { useTypewriter, type TypewriterStep } from "../hooks/use-typewriter"
 import { TypstEditor } from "@/components/typst/editor"
 import { TypstPreview } from "@/components/typst/preview"
+import { NavHint } from "@/components/ui/navigation-hint"
 
 interface WorkshopSlideProps {
   title?: string
@@ -38,7 +39,6 @@ export function WorkshopSlide({
   largePreview = false,
   assets = [],
 }: WorkshopSlideProps) {
-  // Normalize pages list
   const fileList = useMemo(() => pages || ["main.typ"], [pages])
   
   const {
@@ -47,6 +47,7 @@ export function WorkshopSlide({
     currentPrefix,
     currentClosing,
     isTyping,
+    isWaiting,
     start,
     setActiveFile
   } = useTypewriter({
@@ -65,12 +66,10 @@ export function WorkshopSlide({
     }
   })
 
-  // State to hold the current content of all files
   const [userFiles, setUserFiles] = useState<Record<string, string>>({})
   const [userActiveFile, setUserActiveFile] = useState(fileList[0])
   const [isUserEditing, setIsUserEditing] = useState(false)
 
-  // Sync state from typewriter animation
   useEffect(() => {
     if (!isUserEditing) {
       setUserFiles(animatedFiles)
@@ -78,7 +77,6 @@ export function WorkshopSlide({
     }
   }, [animatedFiles, animatedActiveFile, isUserEditing])
 
-  // Start animation timer
   useEffect(() => {
     if (autoStart && !isUserEditing) {
       const hasSteps = Array.isArray(steps) ? steps.length > 0 : Object.keys(steps).length > 0
@@ -92,21 +90,15 @@ export function WorkshopSlide({
   const handleCodeChange = (newCode: string) => {
     if (readOnly) return
     setIsUserEditing(true)
-    setUserFiles(prev => ({
-      ...prev,
-      [userActiveFile]: newCode
-    }))
+    setUserFiles(prev => ({ ...prev, [userActiveFile]: newCode }))
   }
 
   const handleFileChange = (fileName: string) => {
     setIsUserEditing(true)
     setUserActiveFile(fileName)
-    // We update the animation state too so it doesn't jump back if animation resumes/reflows
     setActiveFile(fileName) 
   }
 
-  // Calculate the content specifically for the active file preview
-  // This adds the "closing" character from the typewriter effect if needed
   const codeForPreview = useMemo(() => {
     const currentCode = userFiles[userActiveFile] || ""
     if (isUserEditing) return currentCode
@@ -115,6 +107,9 @@ export function WorkshopSlide({
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-8 lg:p-16">
+        {isWaiting && !isUserEditing && (
+          <NavHint text="Нажмите для перехода к следующему примеру" />
+        )}
       {(title || subtitle) && (
         <motion.div 
           initial={{ opacity: 0, y: -20 }} 
@@ -130,18 +125,15 @@ export function WorkshopSlide({
         </motion.div>
       )}
 
-      <div className={`w-full flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 h-full ${
+      <div className={`w-full flex-1 flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-8 h-full z-0 ${
         largePreview ? "max-w-7xl max-h-[90vh]" : "max-w-6xl max-h-[80vh]"
       }`}>
-        
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.2 }}
           className={`w-full flex flex-col shrink-0 lg:w-1/2 ${
-            largePreview 
-              ? "h-full max-h-[70vh]"
-              : "h-80 lg:h-full lg:max-h-[60vh]"
+            largePreview ? "h-full max-h-[70vh]" : "h-80 lg:h-full lg:max-h-[60vh]"
           }`}
         >
           <TypstEditor 
@@ -161,14 +153,12 @@ export function WorkshopSlide({
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
           className={`w-full flex flex-col shrink-0 lg:w-1/2 ${
-            largePreview 
-              ? "h-full max-h-[70vh]" 
-              : "h-80 lg:h-full lg:max-h-[60vh]"
+            largePreview ? "h-full max-h-[70vh]" : "h-80 lg:h-full lg:max-h-[60vh]"
           }`}
         >
           <TypstPreview 
-            code={codeForPreview}      // Активный код (с курсором анимации)
-            files={userFiles}          // Все файлы (для контекста/импортов)
+            code={codeForPreview}
+            files={userFiles}
             activeFile={userActiveFile}
             assets={assets}
             hiddenPrefix={isUserEditing ? hiddenPrefix : currentPrefix}
@@ -177,8 +167,6 @@ export function WorkshopSlide({
           />
         </motion.div>
       </div>
-
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-linear-to-t from-background to-transparent pointer-events-none" />
     </div>
   )
 }

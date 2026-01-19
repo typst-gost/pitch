@@ -47,7 +47,7 @@ export function BulletSlide({ title, bullets, subtitle, expandable, onBulletClic
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.5 + index * 0.15, type: "spring" }}
-              className="flex-shrink-0 w-3 h-3 mt-3 rounded-full bg-primary group-hover:shadow-[0_0_20px_rgba(37,99,232,0.5)] transition-shadow duration-300"
+              className="shrink-0 w-3 h-3 mt-3 rounded-full bg-primary group-hover:shadow-[0_0_20px_rgba(37,99,232,0.5)] transition-shadow duration-300"
             />
             <span className="text-2xl md:text-3xl text-foreground/90 leading-relaxed">{bullet}</span>
           </motion.button>
@@ -59,7 +59,7 @@ export function BulletSlide({ title, bullets, subtitle, expandable, onBulletClic
         initial={{ scaleX: 0 }}
         animate={{ scaleX: 1 }}
         transition={{ delay: 1, duration: 0.8 }}
-        className="absolute bottom-24 left-16 lg:left-32 w-24 h-1 bg-gradient-to-r from-primary to-transparent origin-left"
+        className="absolute bottom-24 left-16 lg:left-32 w-24 h-1 bg-linear-to-r from-primary to-transparent origin-left"
       />
     </div>
   )

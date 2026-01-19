@@ -1,5 +1,6 @@
 "use client"
 
+import { NavHint } from "@/components/ui/navigation-hint"
 import { motion } from "framer-motion"
 import { X } from "lucide-react"
 import Image from "next/image"
@@ -127,26 +128,7 @@ export function TitleSlide({
         )}
       </div>
 
-      {/* Bottom Navigation Hint */}
-      <motion.div
-        className="absolute bottom-8 flex flex-col items-center gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.2 }}
-      >
-        <span className="text-xs text-muted-foreground tracking-[0.2em] uppercase">Нажмите для продолжения</span>
-        <motion.div
-          animate={{ x: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-          className="w-10 h-6 rounded-full border-2 border-muted-foreground/30 flex items-center justify-center"
-        >
-          <motion.div
-            animate={{ x: [0, 4, 0], opacity: [1, 0.5, 1] }}
-            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY }}
-            className="w-2 h-2 bg-primary rounded-full"
-          />
-        </motion.div>
-      </motion.div>
+      <NavHint/>
     </div>
   )
 }

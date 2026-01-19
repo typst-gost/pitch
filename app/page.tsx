@@ -672,47 +672,51 @@ export default function PresentationPage() {
           key="workshop-typst-intro"
           title="Знакомство с Typst"
           subtitle="Мастерская"
-          hiddenPrefix={`#import "@preview/soviet-matrix:0.2.1": game\n#set page(fill: white, margin: 20pt, width: 200pt, height: auto)\n\n`}
-          steps={[
-            { action: "type", text: "= Привет, Typst!\n\n" },
-            { action: "pause", delay: 500 },
-            { action: "type", text: "Это *жирный* текст.\n" },
-            { action: "pause", delay: 300 },
-            { action: "type", text: "А это _курсив_.\n\n" },
-            { action: "pause", delay: 500 },
-            { action: "type", text: "- Первый пункт\n" },
-            { action: "type", text: "- Второй пункт\n" },
-            { action: "type", text: "- Третий пункт" },
-            { action: "wait" },
-            { action: "clear" },
-
-            // Пример 1: Площадка Typst (упрощенная версия)
-            { action: "type", text: "#set page(paper: \"a5\", height: auto)\n" },
-            { action: "type", text: "#set heading(numbering: \"1.\")\n\n" },
-            { action: "type", text: "= Мастерская Typst\n\n" },
-            { action: "type", text: "== Основы <basics>\n\n" },
-            { action: "type", text: "Typst — это _язык разметки_. " },
-            { action: "type", text: "Среди прочего, вы можете использовать его для:\n\n" },
-            { action: "type", text: "- *Сильного выделения* текста\n" },
-            { action: "type", text: "- Ссылки на @basics\n" },
-            { action: "type", text: "- Набора математики: $a, b in { 1/2, sqrt(4 a b) }$\n\n" },
-            { action: "type", text: "== Правила форматирования\n"},
-            { action: "type", text: "#show link: set text(fill: blue, weight: 700)\n" },
-            { action: "type", text: "#show link: underline\n\n" },
-            { action: "type", text: "https://typst-gost.ru"},
-
-            // Переход ко второму примеру
-            { action: "wait" },
-            { action: "clear" },
-
-            // Пример 2: Игра Soviet Matrix
-            
-            { action: "type", text: "#show: game.with(seed: 123)\n\n" },
-            { action: "type", text: "aaeadeffdddfdddeaeafaaafaadfaaeddeddeddfdddfdedddddfaaef\n" },
-            { action: "type", text: "aeedededddfsaceeedfceafeaaafeefdddfddddfdddfaaaddddafadd\n" },
-            { action: "type", text: "ddddfaeafeaaaaf" },
-          ]}
           typeSpeed={50}
+          pages={["hello.typ", "workshop.typ", "game.typ"]}
+          hiddenPrefix={`#set page(fill: white, margin: 20pt, width: 200pt, height: auto)\n#set text(lang: "ru")\n#import \"@preview/soviet-matrix:0.2.1\": game`}
+          initialCode={{ 
+            "hello.typ": "", 
+            "workshop.typ": "",
+            "game.typ": "#show: game.with(seed: 123)\n\n"
+          }}
+          steps={{
+            "hello.typ": [
+              { action: "type", text: "= Привет, Typst!\n\n" },
+              { action: "pause", delay: 500 },
+              { action: "type", text: "Это *жирный* текст.\n" },
+              { action: "pause", delay: 300 },
+              { action: "type", text: "А это _курсив_.\n\n" },
+              { action: "pause", delay: 500 },
+              { action: "type", text: "- Первый пункт\n" },
+              { action: "type", text: "- Второй пункт\n" },
+              { action: "type", text: "- Третий пункт" },
+              { action: "wait" },
+            ],
+            "workshop.typ": [
+              { action: "type", text: "#set page(paper: \"a5\", height: auto, fill: white)\n" },
+              { action: "type", text: "#set heading(numbering: \"1.\")\n\n" },
+              { action: "type", text: "= Мастерская Typst\n\n" },
+              { action: "type", text: "== Основы <basics>\n\n" },
+              { action: "type", text: "Typst — это _язык разметки_. " },
+              { action: "type", text: "Среди прочего, вы можете использовать его для:\n\n" },
+              { action: "type", text: "- *Сильного выделения* текста\n" },
+              { action: "type", text: "- Ссылки на @basics\n" },
+              { action: "type", text: "- Набора математики: $a, b in { 1/2, sqrt(4 a b) }$\n\n" },
+              { action: "type", text: "== Правила форматирования\n" },
+              { action: "type", text: "#show link: set text(fill: blue, weight: 700)\n" },
+              { action: "type", text: "#show link: underline\n\n" },
+              { action: "type", text: "https://typst-gost.ru" },
+              { action: "wait" },
+            ],
+            "game.typ": [
+              { action: "speed", speed: 150 },
+              { action: "type", text: "aaeadeffdddfdddeaeafaaafaadfaaeddeddeddfdddfdedddddfaaef\n" },
+              { action: "type", text: "aeedededddfsaceeedfceafeaaafeefdddfddddfdddfaaaddddafadd\n" },
+              { action: "type", text: "ddddfaeafeaaaaf" },
+              { action: "wait" },
+            ]
+          }}
         />
       ),
       type: "workshop",
