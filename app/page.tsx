@@ -15,6 +15,7 @@ import { DetailSlide } from "@/components/presentation/slides/detail-slide"
 import { WorkshopSlide } from "@/components/presentation/slides/workshop-slide"
 import { GallerySlide } from "@/components/presentation/slides/gallery-slide"
 import { QRLinkSlide } from "@/components/presentation/slides/qr-link-slide"
+import { ChartSlide } from "@/components/presentation/slides/chart-slide"
 
 import {
   Layout, FileText, ListOrdered, Image as ImageIcon,
@@ -510,6 +511,56 @@ export const subslides = [
 
 
 export default function PresentationPage() {
+  const cumulativeVisitsData = [
+    {"date": "2025-11-23", "subscribers": 0}, {"date": "2025-11-24", "subscribers": 15}, 
+    {"date": "2025-11-25", "subscribers": 30}, {"date": "2025-11-26", "subscribers": 50}, 
+    {"date": "2025-11-27", "subscribers": 67}, {"date": "2025-11-28", "subscribers": 81}, 
+    {"date": "2025-11-29", "subscribers": 91}, {"date": "2025-11-30", "subscribers": 97}, 
+    {"date": "2025-12-01", "subscribers": 111}, {"date": "2025-12-02", "subscribers": 142}, 
+    {"date": "2025-12-03", "subscribers": 160}, {"date": "2025-12-04", "subscribers": 182}, 
+    {"date": "2025-12-05", "subscribers": 210}, {"date": "2025-12-06", "subscribers": 220}, 
+    {"date": "2025-12-07", "subscribers": 222}, {"date": "2025-12-08", "subscribers": 242}, 
+    {"date": "2025-12-09", "subscribers": 281}, {"date": "2025-12-10", "subscribers": 315}, 
+    {"date": "2025-12-11", "subscribers": 342}, {"date": "2025-12-12", "subscribers": 371}, 
+    {"date": "2025-12-13", "subscribers": 402}, {"date": "2025-12-14", "subscribers": 430}, 
+    {"date": "2025-12-15", "subscribers": 460}, {"date": "2025-12-16", "subscribers": 488}, 
+    {"date": "2025-12-17", "subscribers": 526}, {"date": "2025-12-18", "subscribers": 540}, 
+    {"date": "2025-12-19", "subscribers": 560}, {"date": "2025-12-20", "subscribers": 583}, 
+    {"date": "2025-12-21", "subscribers": 611}, {"date": "2025-12-22", "subscribers": 631}, 
+    {"date": "2025-12-23", "subscribers": 681}, {"date": "2025-12-24", "subscribers": 726}, 
+    {"date": "2025-12-25", "subscribers": 750}, {"date": "2025-12-26", "subscribers": 767}, 
+    {"date": "2025-12-27", "subscribers": 789}, {"date": "2025-12-28", "subscribers": 799}, 
+    {"date": "2025-12-29", "subscribers": 808}, {"date": "2025-12-30", "subscribers": 818}, 
+    {"date": "2025-12-31", "subscribers": 827}, {"date": "2026-01-01", "subscribers": 859}, 
+    {"date": "2026-01-02", "subscribers": 867}, {"date": "2026-01-03", "subscribers": 887}, 
+    {"date": "2026-01-04", "subscribers": 892}, {"date": "2026-01-05", "subscribers": 904}, 
+    {"date": "2026-01-06", "subscribers": 915}, {"date": "2026-01-07", "subscribers": 922}, 
+    {"date": "2026-01-08", "subscribers": 928}, {"date": "2026-01-09", "subscribers": 946}, 
+    {"date": "2026-01-10", "subscribers": 973}, {"date": "2026-01-11", "subscribers": 996}, 
+    {"date": "2026-01-12", "subscribers": 1035}, {"date": "2026-01-13", "subscribers": 1054}, 
+    {"date": "2026-01-14", "subscribers": 1082}, {"date": "2026-01-15", "subscribers": 1101}, 
+    {"date": "2026-01-16", "subscribers": 1126}, {"date": "2026-01-17", "subscribers": 1172}, 
+    {"date": "2026-01-18", "subscribers": 1190}, {"date": "2026-01-19", "subscribers": 1222}, 
+    {"date": "2026-01-20", "subscribers": 1254}, {"date": "2026-01-21", "subscribers": 1277}, 
+    {"date": "2026-01-22", "subscribers": 1302}, {"date": "2026-01-23", "subscribers": 1319}, 
+    {"date": "2026-01-24", "subscribers": 1331}, {"date": "2026-01-25", "subscribers": 1336}
+  ];
+
+
+  const chartData2 = [
+    { date: '2024-01-01', subscribers: 450 },
+    { date: '2024-02-01', subscribers: 480 },
+    { date: '2024-03-01', subscribers: 510 },
+    { date: '2024-04-01', subscribers: 540 },
+    { date: '2024-05-01', subscribers: 570 },
+    { date: '2024-06-01', subscribers: 600 },
+    { date: '2024-07-01', subscribers: 630 },
+    { date: '2024-08-01', subscribers: 660 },
+    { date: '2024-09-01', subscribers: 690 },
+    { date: '2024-10-01', subscribers: 720 },
+    { date: '2024-11-01', subscribers: 750 },
+    { date: '2024-12-01', subscribers: 780 },
+  ];
   const slides: (React.ReactNode | SlideConfig)[] = [
     // ============================================
     // SLIDE 1: Title
@@ -806,6 +857,19 @@ export default function PresentationPage() {
         { value: 20, suffix: "+", label: "Курсовых работ", description: "Разработано на Typst" },
         { value: 70, suffix: "+", label: "Лабораторных работ", description: "И это только наши" },
       ]}
+    />,
+
+    <ChartSlide
+      key="chart-1"
+      data={cumulativeVisitsData}
+      caption="Рост визитов сайта в 2025-2026 году"
+      label="Визиты"
+    />,
+
+    <ChartSlide
+      key="chart-2"
+      data={chartData2}
+      caption="Рост подписчиков в 2024 году"
     />,
 
     // ============================================
